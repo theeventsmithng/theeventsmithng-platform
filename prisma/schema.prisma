@@ -170,6 +170,7 @@ model AdminUser {
   activityEntries  ActivityLogEntry[]
   otpCodes         OtpCode[]           @relation("AdminOtp")
   sessions         Session[]           @relation("AdminSession")
+  assignedTasks    Task[]
 }
 
 // One row per email authorised to view a specific event's client dashboard.

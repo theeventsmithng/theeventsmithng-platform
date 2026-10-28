@@ -191,3 +191,5 @@ exist yet) and anything inside an individual event's workspace (Budget,
 Vendor Payments, Itinerary, etc.) — those still run on the prototype's
 demo data regardless of mode. Login, the Events list, Team, and Client
 Access are fully wired.
+
+<!-- trigger redeploy: repo now public, deploying fixed schema -->

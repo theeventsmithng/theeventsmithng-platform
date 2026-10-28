@@ -1,0 +1,2196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The EventSmith NG: Admin Prototype</title>
+</head>
+<body style="margin:0;">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+
+.tes-app {
+  --bg: #F4EBDD;
+  --surface: #FAF6F0;
+  --surface-alt: #F4EBDD;
+  --ink: #2B1C18;
+  --ink-soft: #4A3028;
+  --ink-muted: #9A7B68;
+  --brand: #4A3028;
+  --brand-2: #2B1C18;
+  --taupe: #9A7B68;
+  --line: #D8C7B5;
+  --line-soft: #E9DFD3;
+  --positive: #5F7052;
+  --positive-bg: #EDF0E5;
+  --warning: #A56A3E;
+  --warning-bg: #F6EADB;
+  --danger: #9B4A3B;
+  --danger-bg: #F5E4DE;
+  --info: #6C6250;
+
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 500;
+  color: var(--ink);
+  background: var(--bg);
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+  font-size: 15.5px;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+}
+.tes-app.tes-app--full { display: block; }
+.tes-app * { box-sizing: border-box; }
+.tes-app h1, .tes-app h2, .tes-app h3, .tes-app .serif {
+  font-family: 'Cormorant', serif; font-style: italic;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--brand);
+}
+.tes-app button { font-family: inherit; cursor: pointer; }
+.tes-app a { color: inherit; text-decoration: none; }
+
+/* ---------- SIDEBAR ---------- */
+.tes-sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: var(--brand);
+  color: #EFE7D9;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 16px;
+}
+.tes-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 22px 8px;
+  border-bottom: 1px solid rgba(239,231,217,0.14);
+  margin-bottom: 18px;
+}
+.tes-logo-mark {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: #EFE7D9;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.tes-logo-mark img { width: 78%; height: 78%; object-fit: contain; }
+.tes-logo-text { font-family: 'Cormorant', serif; font-style: italic; font-size: 15.5px; line-height: 1.15; color: #F7F1E4; }
+.tes-logo-text small { display: block; font-family: 'Cormorant Garamond', serif; font-size: 10.5px; color: #C9B79C; letter-spacing: 0.02em; margin-top: 2px; }
+
+.tes-nav { display: flex; flex-direction: column; gap: 2px; }
+.tes-nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: #D9CBB4;
+  background: transparent;
+  border: none;
+  font-size: 13.5px;
+  text-align: left;
+  width: 100%;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.tes-nav-item:hover { background: rgba(239,231,217,0.08); color: #F7F1E4; }
+.tes-nav-item.active { background: rgba(239,231,217,0.14); color: #F7F1E4; font-weight: 600; }
+.tes-nav-icon { width: 17px; text-align: center; opacity: 0.9; font-size: 14px; }
+
+.tes-sidebar-footer {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(239,231,217,0.14);
+  font-size: 12px;
+  color: #B8A78C;
+  display: flex; align-items: center; gap: 8px;
+}
+.tes-avatar-sm {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #6B4A2E; color: #F0E7D6;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 600; flex-shrink: 0;
+}
+
+/* ---------- MAIN ---------- */
+.tes-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.tes-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 32px 0 32px;
+}
+.tes-page-title { font-size: 25px; margin: 0; }
+.tes-page-sub { color: var(--ink-muted); font-size: 13px; margin-top: 3px; }
+.tes-content { padding: 18px 32px 40px 32px; overflow-y: auto; }
+
+.tes-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  font-size: 13px; font-weight: 600;
+  background: var(--brand);
+  color: #F7F1E4;
+}
+.tes-btn:hover { background: var(--brand-2); }
+.tes-btn.secondary {
+  background: transparent; color: var(--brand); border: 1px solid var(--line);
+}
+.tes-btn.secondary:hover { background: var(--surface-alt); }
+.tes-btn.small { padding: 6px 12px; font-size: 12px; }
+
+/* ---------- KPI TILES ---------- */
+.tes-kpi-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin: 18px 0 26px 0; }
+.tes-kpi {
+  background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px;
+  padding: 14px 16px;
+}
+.tes-kpi-label { font-size: 11.5px; color: var(--ink-muted); font-weight: 500; }
+.tes-kpi-value { font-family: 'Cormorant', serif; font-style: italic; font-size: 21px; color: var(--brand); margin-top: 5px; }
+.tes-kpi-value.warn { color: var(--warning); }
+.tes-kpi-value.danger { color: var(--danger); }
+
+/* ---------- FILTER BAR ---------- */
+.tes-filterbar { display: flex; gap: 8px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.tes-chip {
+  padding: 6px 13px; border-radius: 20px; font-size: 12.5px; font-weight: 500;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
+}
+.tes-chip.active { background: var(--brand); color: #F7F1E4; border-color: var(--brand); }
+
+/* ---------- EVENT CARDS ---------- */
+.tes-events-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.tes-event-card {
+  background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px;
+  padding: 18px 20px; cursor: pointer; transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.tes-event-card:hover { border-color: var(--taupe); }
+.tes-event-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.tes-event-name { font-family: 'Cormorant', serif; font-style: italic; font-size: 17px; color: var(--ink); }
+.tes-event-type { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+.tes-stage-pill {
+  font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;
+  background: var(--positive-bg); color: var(--positive); white-space: nowrap;
+}
+.tes-stage-pill.warn { background: var(--warning-bg); color: var(--warning); }
+.tes-event-meta { display: flex; gap: 16px; margin-top: 12px; font-size: 12.5px; color: var(--ink-soft); }
+.tes-event-meta b { color: var(--ink); font-weight: 600; }
+.tes-progress-track { height: 6px; background: var(--line-soft); border-radius: 4px; margin-top: 14px; overflow: hidden; }
+.tes-progress-fill { height: 100%; background: var(--brand-2); border-radius: 4px; }
+.tes-progress-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-muted); margin-top: 5px; }
+
+/* ---------- TWO COLUMN DASH ---------- */
+.tes-dash-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-top: 24px; align-items: start;}
+.tes-panel { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 18px 20px; }
+.tes-panel-title { font-size: 13.5px; font-weight: 600; color: var(--brand); margin-bottom: 12px; }
+.tes-task-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+.tes-task-row:last-child { border-bottom: none; }
+.tes-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.tes-dot.high { background: var(--danger); }
+.tes-dot.med { background: var(--warning); }
+.tes-dot.low { background: var(--info); }
+.tes-task-meta { margin-left: auto; font-size: 11.5px; color: var(--ink-muted); white-space: nowrap; }
+
+/* ---------- EVENT WORKSPACE ---------- */
+.tes-breadcrumb { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 6px; }
+.tes-breadcrumb span { cursor: pointer; }
+.tes-breadcrumb span:hover { color: var(--brand); text-decoration: underline; }
+.tes-workspace-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;}
+.tes-workspace-title-row { display: flex; align-items: baseline; gap: 12px; }
+.tes-countdown { font-size: 12.5px; color: var(--warning); font-weight: 600; background: var(--warning-bg); padding: 4px 10px; border-radius: 20px; }
+
+.tes-tabbar { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin: 18px 0 22px 0; overflow-x: auto; }
+.tes-tab {
+  padding: 10px 15px; font-size: 13px; font-weight: 500; color: var(--ink-muted);
+  border-bottom: 2px solid transparent; background: none; white-space: nowrap;
+}
+.tes-tab.active { color: var(--brand); border-bottom-color: var(--brand); font-weight: 600; }
+.tes-tab:hover:not(.active) { color: var(--ink-soft); }
+
+.tes-overview-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+.tes-fact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 22px; margin-top: 4px; }
+.tes-fact-label { font-size: 11px; color: var(--ink-muted); text-transform: none; }
+.tes-fact-value { font-size: 13.5px; color: var(--ink); margin-top: 3px; font-weight: 500; }
+
+.tes-component-tabs { display: flex; gap: 8px; margin: 16px 0; }
+.tes-component-tab {
+  padding: 7px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft);
+}
+.tes-component-tab.active { background: var(--brand); color: #F7F1E4; border-color: var(--brand); }
+
+.tes-email-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+.tes-email-row:last-child { border-bottom: none; }
+.tes-email-row .tes-remove { color: var(--danger); font-size: 12px; font-weight: 600; background: none; border: none; }
+
+/* ---------- BUDGET ---------- */
+.tes-budget-summary { display: flex; gap: 12px; margin-bottom: 18px; }
+.tes-budget-summary .tes-kpi { flex: 1; }
+.tes-category { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+.tes-category-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 18px; background: var(--surface-alt); cursor: pointer;
+}
+.tes-category-head-left { display: flex; align-items: center; gap: 10px; }
+.tes-caret { font-size: 11px; color: var(--ink-muted); transition: transform 0.15s ease; display: inline-block; }
+.tes-caret.open { transform: rotate(90deg); }
+.tes-category-name { font-weight: 600; font-size: 13.5px; color: var(--ink); }
+.tes-category-total { font-family: 'Cormorant', serif; font-style: italic; font-size: 15px; color: var(--brand); }
+.tes-category-body { padding: 4px 18px 12px 18px; display: none; }
+.tes-category-body.open { display: block; }
+
+.tes-lineitem { padding: 11px 0; border-bottom: 1px solid var(--line-soft); }
+.tes-lineitem:last-child { border-bottom: none; }
+.tes-lineitem-row { display: flex; align-items: center; gap: 10px; }
+.tes-lineitem-name { font-size: 13.5px; font-weight: 500; flex: 1; }
+.tes-mode-badge {
+  font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px;
+  background: var(--line-soft); color: var(--ink-soft); cursor: pointer;
+}
+.tes-mode-badge.competing { background: #EDE3F0; color: #6B4E7A; }
+.tes-mode-badge.split { background: #DCE6EA; color: #3F6A78; }
+.tes-lineitem-amount { font-size: 13.5px; font-weight: 600; color: var(--ink); width: 130px; text-align: right; }
+.tes-lineitem-balance { font-size: 11.5px; color: var(--ink-muted); width: 130px; text-align: right; }
+.tes-lineitem-detail { display: none; margin-top: 10px; padding: 12px 14px; background: var(--surface-alt); border-radius: 8px; }
+.tes-lineitem-detail.open { display: block; }
+
+.tes-vendor-option-row, .tes-vendor-alloc-row {
+  display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--line);
+}
+.tes-vendor-option-row:last-child, .tes-vendor-alloc-row:last-child { border-bottom: none; }
+.tes-vo-name { font-weight: 600; font-size: 12.5px; flex: 1; }
+.tes-vo-includes { font-size: 11.5px; color: var(--ink-muted); flex: 1.4; }
+.tes-vo-amount { font-size: 12.5px; font-weight: 600; width: 110px; text-align: right; }
+.tes-status-tag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; width: 92px; text-align: center; }
+.tes-status-tag.selected { background: var(--positive-bg); color: var(--positive); }
+.tes-status-tag.rejected { background: var(--line-soft); color: var(--ink-muted); text-decoration: line-through; }
+.tes-status-tag.considering { background: var(--warning-bg); color: var(--warning); }
+.tes-select-btn { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 6px; border: 1px solid var(--brand); background: none; color: var(--brand); }
+.tes-select-btn:hover { background: var(--brand); color: #F7F1E4; }
+
+.tes-alloc-portion { font-size: 11.5px; color: var(--ink-muted); width: 100px; }
+.tes-alloc-sum { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 11.5px; color: var(--ink-muted); display: flex; justify-content: space-between; }
+
+.tes-grandtotal-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--brand); color: #F7F1E4; border-radius: 10px; padding: 16px 22px; margin-top: 6px;
+}
+.tes-grandtotal-bar .tes-gt-label { font-size: 12.5px; color: #D9CBB4; }
+.tes-grandtotal-bar .tes-gt-value { font-family: 'Cormorant', serif; font-style: italic; font-size: 22px; }
+
+.tes-toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--brand); color: #F7F1E4; padding: 11px 20px; border-radius: 8px; font-size: 13px;
+  opacity: 0; transition: opacity 0.2s ease, transform 0.2s ease; pointer-events: none; z-index: 50;
+}
+.tes-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.tes-placeholder { padding: 60px 20px; text-align: center; color: var(--ink-muted); }
+.tes-placeholder .serif { font-size: 18px; display: block; margin-bottom: 6px; color: var(--ink-soft); }
+.tes-placeholder-mark { width: 46px; height: 46px; margin: 0 auto 14px auto; opacity: 0.35; }
+.tes-placeholder-mark img { width: 100%; height: 100%; object-fit: contain; }
+
+/* ---------- SHARED: FORMS, LISTS, TIER BADGES, MODAL ---------- */
+.tes-form-label { font-size: 11.5px; font-weight: 600; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 6px; }
+.tes-form-input, .tes-form-select {
+  width: 100%; padding: 9px 12px; border-radius: 7px; border: 1px solid var(--line);
+  font-size: 13.5px; font-family: inherit; background: var(--surface-alt); color: var(--ink);
+}
+.tes-form-input:focus, .tes-form-select:focus { outline: none; border-color: var(--brand-2); }
+.tes-form-row { margin-bottom: 14px; }
+.tes-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+.tes-tier-badge { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.tes-tier-badge.super { background: var(--brand); color: #F7F1E4; }
+.tes-tier-badge.senior { background: var(--positive-bg); color: var(--positive); }
+.tes-tier-badge.junior { background: var(--line-soft); color: var(--ink-soft); }
+.tes-tier-badge.inactive { background: var(--danger-bg); color: var(--danger); }
+
+.tes-list-row { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid var(--line-soft); font-size: 13.5px; }
+.tes-list-row:last-child { border-bottom: none; }
+.tes-list-row .tes-list-main { flex: 1; min-width: 0; }
+.tes-list-row .tes-list-title { font-weight: 600; color: var(--ink); }
+.tes-list-row .tes-list-sub { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+
+.tes-protected-note { font-size: 11px; color: var(--ink-muted); font-style: italic; }
+.tes-banner { background: var(--surface-alt); border: 1px solid var(--line-soft); border-radius: 10px; padding: 12px 16px; font-size: 13px; color: var(--ink-soft); margin-bottom: 18px; }
+.tes-banner.warn { background: var(--warning-bg); border-color: var(--warning); color: var(--warning); }
+
+.tes-modal-overlay {
+  position: fixed; inset: 0; background: rgba(43,28,24,0.55); display: flex;
+  align-items: center; justify-content: center; z-index: 60; padding: 24px;
+}
+.tes-modal-card {
+  background: var(--surface); border-radius: 14px; max-width: 560px; width: 100%;
+  max-height: 86vh; overflow-y: auto; padding: 28px 30px;
+}
+.tes-modal-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+.tes-modal-title { font-family: 'Cormorant', serif; font-style: italic; font-size: 21px; color: var(--ink); }
+.tes-modal-close { background: none; border: none; color: var(--ink-muted); font-size: 18px; cursor: pointer; line-height: 1; }
+.tes-modal-close:hover { color: var(--brand); }
+
+.tes-type-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 4px; }
+.tes-type-card {
+  border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; cursor: pointer;
+  background: var(--surface-alt);
+}
+.tes-type-card.active { border-color: var(--brand); background: var(--line-soft); }
+.tes-type-card .tes-type-name { font-weight: 600; font-size: 13.5px; color: var(--ink); }
+.tes-type-card .tes-type-meta { font-size: 11px; color: var(--ink-muted); margin-top: 3px; }
+
+/* ---------- LOGIN ---------- */
+.tes-login-page {
+  background: var(--bg); min-height: 100vh; width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif; color: var(--ink);
+}
+.tes-login-card {
+  background: var(--surface); border: 1px solid var(--line-soft); border-radius: 16px;
+  padding: 40px 38px; width: 380px; text-align: center;
+  box-shadow: 0 18px 40px -20px rgba(67,48,31,0.25);
+}
+.tes-login-mark { width: 64px; height: 64px; margin: 0 auto 18px auto; border-radius: 50%; background: var(--brand); display:flex; align-items:center; justify-content:center; overflow: hidden; }
+.tes-login-mark img { width: 76%; height: 76%; object-fit: contain; }
+.tes-login-title { font-size: 20px; margin-bottom: 4px; }
+.tes-login-sub { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 26px; }
+.tes-login-input {
+  width: 100%; padding: 11px 14px; border-radius: 8px; border: 1px solid var(--line);
+  font-size: 13.5px; font-family: inherit; margin-bottom: 14px; background: var(--surface-alt); color: var(--ink);
+  text-align: center; letter-spacing: 0.02em;
+}
+.tes-login-input:focus { outline: none; border-color: var(--brand-2); }
+.tes-login-btn { width: 100%; justify-content: center; padding: 11px; font-size: 13.5px; }
+.tes-login-foot { margin-top: 16px; font-size: 12px; color: var(--ink-muted); }
+.tes-login-foot a { color: var(--brand); font-weight: 600; cursor: pointer; }
+.tes-login-back { margin-top: 22px; font-size: 12px; color: var(--ink-muted); cursor: pointer; }
+.tes-login-back:hover { color: var(--brand); }
+
+/* ---------- CLIENT DASHBOARD ---------- */
+.tes-client-page { background: var(--bg); min-height: 100vh; width: 100%; display: flex; justify-content: center; }
+.tes-client-inner { width: 100%; max-width: 620px; padding: 48px 28px 60px 28px; }
+.tes-client-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.tes-client-admin-link { font-size: 12px; color: var(--ink-muted); cursor: pointer; }
+.tes-client-admin-link:hover { color: var(--brand); }
+.tes-client-hero { text-align: center; padding: 26px 0 34px 0; }
+.tes-client-mark { width: 68px; height: 68px; margin: 0 auto 18px auto; border-radius: 50%; background: var(--brand); display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.tes-client-mark img { width: 76%; height: 76%; object-fit: contain; }
+.tes-client-names { font-size: 30px; margin-bottom: 8px; }
+.tes-client-date { font-size: 13.5px; color: var(--ink-muted); }
+.tes-client-countdown { display: inline-block; margin-top: 16px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: 30px; padding: 8px 20px; font-size: 12.5px; color: var(--brand); font-weight: 600; }
+.tes-client-section { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 14px; padding: 22px 24px; margin-bottom: 16px; }
+.tes-client-section-title { font-size: 12px; text-transform: none; color: var(--ink-muted); font-weight: 600; margin-bottom: 12px; }
+.tes-client-fact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 20px; }
+.tes-moodboard-frame { border: 1px solid var(--line); border-radius: 10px; background: var(--surface-alt); padding: 34px; text-align: center; color: var(--ink-muted); font-size: 12.5px; }
+.tes-client-milestone { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+.tes-client-milestone:last-child { border-bottom: none; }
+.tes-client-milestone .tes-dot.done { background: var(--positive); }
+.tes-client-fee-value { font-family: 'Cormorant', serif; font-style: italic; font-size: 22px; color: var(--brand); margin-top: 4px; }
+
+/* ---------- PLANNING SCHEDULE ---------- */
+.tes-phase { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+.tes-phase-head { padding: 15px 20px; background: var(--surface-alt); cursor: pointer; }
+.tes-phase-head-top { display: flex; justify-content: space-between; align-items: center; }
+.tes-phase-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: #F7F1E4; font-size: 11px; font-weight: 700; margin-right: 8px; flex-shrink: 0; }
+.tes-phase-name { font-family: 'Cormorant', serif; font-style: italic; font-size: 15.5px; color: var(--ink); display: inline-flex; align-items: center; }
+.tes-phase-anchor { font-size: 11px; color: var(--brand-2); font-weight: 600; background: var(--line-soft); padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+.tes-phase-focus { font-size: 12px; color: var(--ink-muted); margin-top: 4px; margin-left: 30px; }
+.tes-phase-progress-track { height: 5px; background: var(--line-soft); border-radius: 4px; margin-top: 10px; margin-left: 30px; overflow: hidden; }
+.tes-phase-progress-fill { height: 100%; background: var(--positive); }
+.tes-phase-body { padding: 4px 20px 16px 20px; display: none; }
+.tes-phase-body.open { display: block; }
+.tes-phase-explanation { font-size: 12.5px; color: var(--ink-soft); margin: 10px 0 14px 30px; line-height: 1.6; }
+.tes-phase-task { display: flex; align-items: center; gap: 10px; padding: 8px 0 8px 30px; border-top: 1px solid var(--line-soft); font-size: 13px; }
+.tes-task-checkbox { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--taupe); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #fff; cursor: pointer; }
+.tes-task-checkbox.done { background: var(--positive); border-color: var(--positive); }
+.tes-task-checkbox.inprogress { background: var(--warning-bg); border-color: var(--warning); }
+.tes-task-label { flex: 1; }
+.tes-task-label.done { color: var(--ink-muted); text-decoration: line-through; }
+
+/* ---------- VENDORS ---------- */
+.tes-vendor-card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; }
+.tes-vendor-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.tes-vendor-name { font-family: 'Cormorant', serif; font-style: italic; font-size: 15px; }
+.tes-vendor-cat { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+.tes-vendor-linked { font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
+.tes-vendor-contacts { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.tes-contact-row { display: flex; align-items: center; gap: 10px; font-size: 12.5px; padding: 4px 0; }
+.tes-contact-row.former { color: var(--ink-muted); }
+.tes-contact-current-tag { font-size: 10px; font-weight: 700; color: var(--positive); background: var(--positive-bg); padding: 2px 8px; border-radius: 20px; }
+.tes-contact-former-tag { font-size: 10px; font-weight: 700; color: var(--ink-muted); background: var(--line-soft); padding: 2px 8px; border-radius: 20px; }
+.tes-contact-toggle { font-size: 11.5px; color: var(--brand); font-weight: 600; cursor: pointer; margin-top: 6px; display: inline-block; }
+.tes-contact-history { display: none; margin-top: 6px; }
+.tes-contact-history.open { display: block; }
+
+/* ---------- PAYMENTS / FUNDS ---------- */
+.tes-subtabbar { display: flex; gap: 8px; margin-bottom: 18px; }
+.tes-subtab { padding: 8px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--line); background: var(--surface); color: var(--ink-soft); }
+.tes-subtab.active { background: var(--brand); color: #F7F1E4; border-color: var(--brand); }
+.tes-fund-card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+.tes-fund-head { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+.tes-fund-payer { font-weight: 600; font-size: 13.5px; }
+.tes-fund-date { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+.tes-fund-amount { font-family: 'Cormorant', serif; font-style: italic; font-size: 16px; color: var(--brand); }
+.tes-fund-body { padding: 0 20px 14px 20px; display: none; }
+.tes-fund-body.open { display: block; }
+.tes-fund-alloc-row { display: flex; justify-content: space-between; padding: 6px 0; border-top: 1px dashed var(--line); font-size: 12.5px; }
+
+/* ---------- ITINERARY ---------- */
+.tes-itin-toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 14px; }
+.tes-itin-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px;
+  padding: 14px 18px; margin-bottom: 8px; cursor: grab;
+}
+.tes-itin-row.dragging { opacity: 0.4; }
+.tes-itin-drag { color: var(--taupe); font-size: 14px; padding-top: 2px; }
+.tes-itin-time { width: 78px; flex-shrink: 0; }
+.tes-itin-time-input {
+  width: 76px; font-weight: 600; font-size: 13px; color: var(--brand);
+  border: 1px solid transparent; background: transparent; border-radius: 5px;
+  padding: 3px 5px; font-family: inherit;
+}
+.tes-itin-time-input:hover { border-color: var(--line); }
+.tes-itin-time-input:focus { outline: none; border-color: var(--brand-2); background: var(--surface-alt); }
+.tes-itin-row.out-of-order .tes-itin-time-input { color: var(--danger); }
+.tes-itin-warning { font-size: 10.5px; font-weight: 600; color: var(--danger); background: var(--danger-bg); padding: 3px 9px; border-radius: 20px; margin-top: 6px; display: inline-block; }
+.tes-itin-body { flex: 1; }
+.tes-itin-activity { font-family: 'Cormorant', serif; font-style: italic; font-size: 15px; }
+.tes-itin-location { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+.tes-itin-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.tes-itin-tag { font-size: 10.5px; font-weight: 600; padding: 3px 9px; border-radius: 20px; background: var(--line-soft); color: var(--ink-soft); }
+.tes-itin-tag.coordinator { background: #E3E8DC; color: var(--positive); }
+
+/* ---------- DOCUMENTS ---------- */
+.tes-doc-group-title { font-size: 12px; font-weight: 600; color: var(--ink-muted); margin: 18px 0 8px 0; }
+.tes-doc-row { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--line-soft); border-radius: 10px; padding: 12px 18px; margin-bottom: 8px; }
+.tes-doc-name { font-weight: 600; font-size: 13px; flex: 1; }
+.tes-doc-version { font-size: 11.5px; color: var(--ink-muted); }
+.tes-doc-versions-toggle { font-size: 11.5px; color: var(--brand); font-weight: 600; cursor: pointer; }
+.tes-doc-history { display: none; padding: 0 18px 12px 18px; margin-top: -8px; }
+.tes-doc-history.open { display: block; }
+.tes-doc-history-row { font-size: 12px; color: var(--ink-muted); padding: 5px 0; border-top: 1px dashed var(--line); display: flex; justify-content: space-between; }
+.tes-visible-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--ink-muted); cursor: pointer; }
+.tes-switch { width: 32px; height: 18px; border-radius: 10px; background: var(--line); position: relative; transition: background 0.15s ease; }
+.tes-switch.on { background: var(--positive); }
+.tes-switch-knob { width: 14px; height: 14px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left 0.15s ease; }
+.tes-switch.on .tes-switch-knob { left: 16px; }
+
+/* ---------- NOTES ---------- */
+.tes-notes-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.tes-note-card { background: var(--surface); border: 1px solid var(--line-soft); border-radius: 12px; padding: 14px 18px; margin-bottom: 8px; }
+.tes-note-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.tes-note-category { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: var(--line-soft); color: var(--ink-soft); }
+.tes-note-meta { font-size: 11px; color: var(--ink-muted); }
+.tes-note-content { font-size: 13px; color: var(--ink-soft); line-height: 1.6; }
+
+/* ---------- ACTIVITY LOG ---------- */
+.tes-activity-row { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line-soft); font-size: 13px; }
+.tes-activity-row:last-child { border-bottom: none; }
+.tes-activity-icon { width: 26px; height: 26px; border-radius: 50%; background: var(--surface-alt); border: 1px solid var(--line-soft); display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0; }
+.tes-activity-text b { font-weight: 600; }
+.tes-activity-time { font-size: 11px; color: var(--ink-muted); margin-top: 2px; }
+</style>
+
+<div id="tesRoot"></div>
+
+<script>
+(function(){
+  const LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0CAYAAADL1t+KAAAAtGVYSWZJSSoACAAAAAYAEgEDAAEAAAABAAAAGgEFAAEAAABWAAAAGwEFAAEAAABeAAAAKAEDAAEAAAACAAAAEwIDAAEAAAABAAAAaYcEAAEAAABmAAAAAAAAAGAAAAABAAAAYAAAAAEAAAAGAACQBwAEAAAAMDIxMAGRBwAEAAAAAQIDAACgBwAEAAAAMDEwMAGgAwABAAAA//8AAAKgBAABAAAA9AEAAAOgBAABAAAA9AEAAAAAAAAA4cNEAAAACXBIWXMAAA7EAAAOxAGVKw4bAAAFyWlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSfvu78nIGlkPSdXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQnPz4KPHg6eG1wbWV0YSB4bWxuczp4PSdhZG9iZTpuczptZXRhLyc+CjxyZGY6UkRGIHhtbG5zOnJkZj0naHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyc+CgogPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9JycKICB4bWxuczpBdHRyaWI9J2h0dHA6Ly9ucy5hdHRyaWJ1dGlvbi5jb20vYWRzLzEuMC8nPgogIDxBdHRyaWI6QWRzPgogICA8cmRmOlNlcT4KICAgIDxyZGY6bGkgcmRmOnBhcnNlVHlwZT0nUmVzb3VyY2UnPgogICAgIDxBdHRyaWI6Q3JlYXRlZD4yMDI2LTA5LTIzPC9BdHRyaWI6Q3JlYXRlZD4KICAgICA8QXR0cmliOkRhdGE+eyZxdW90O2RvYyZxdW90OzomcXVvdDtEQUZhN3p4dWtxdyZxdW90OywmcXVvdDt1c2VyJnF1b3Q7OiZxdW90O1VBREI1M3FITUwwJnF1b3Q7LCZxdW90O2JyYW5kJnF1b3Q7OiZxdW90O0JBREI1LW1tX2lVJnF1b3Q7LCZxdW90O3RlbXBsYXRlJnF1b3Q7OiZxdW90O0JsYWNrIGFuZCBXaGl0ZSBFbGVnYW50IFBob3RvZ3JhcGh5IEluaXRpYWxzIExvZ28mcXVvdDt9PC9BdHRyaWI6RGF0YT4KICAgICA8QXR0cmliOkV4dElkPmFlM2U5ZTk5LTc3MWItNDQxYi05NjU1LTg5YTFlMTBhMTZkMTwvQXR0cmliOkV4dElkPgogICAgIDxBdHRyaWI6RmJJZD41MjUyNjU5MTQxNzk1ODA8L0F0dHJpYjpGYklkPgogICAgIDxBdHRyaWI6VG91Y2hUeXBlPjI8L0F0dHJpYjpUb3VjaFR5cGU+CiAgICA8L3JkZjpsaT4KICAgPC9yZGY6U2VxPgogIDwvQXR0cmliOkFkcz4KIDwvcmRmOkRlc2NyaXB0aW9uPgoKIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PScnCiAgeG1sbnM6ZGM9J2h0dHA6Ly9wdXJsLm9yZy9kYy9lbGVtZW50cy8xLjEvJz4KICA8ZGM6dGl0bGU+CiAgIDxyZGY6QWx0PgogICAgPHJkZjpsaSB4bWw6bGFuZz0neC1kZWZhdWx0Jz5URVMgTG9nbyAtIDE8L3JkZjpsaT4KICAgPC9yZGY6QWx0PgogIDwvZGM6dGl0bGU+CiA8L3JkZjpEZXNjcmlwdGlvbj4KCiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0nJwogIHhtbG5zOnBkZj0naHR0cDovL25zLmFkb2JlLmNvbS9wZGYvMS4zLyc+CiAgPHBkZjpBdXRob3I+QmFzc2V5IE9rb248L3BkZjpBdXRob3I+CiA8L3JkZjpEZXNjcmlwdGlvbj4KCiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0nJwogIHhtbG5zOnhtcD0naHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyc+CiAgPHhtcDpDcmVhdG9yVG9vbD5DYW52YSBkb2M9REFGYTd6eHVrcXcgdXNlcj1VQURCNTNxSE1MMCBicmFuZD1CQURCNS1tbV9pVSB0ZW1wbGF0ZT1CbGFjayBhbmQgV2hpdGUgRWxlZ2FudCBQaG90b2dyYXBoeSBJbml0aWFscyBMb2dvPC94bXA6Q3JlYXRvclRvb2w+CiA8L3JkZjpEZXNjcmlwdGlvbj4KPC9yZGY6UkRGPgo8L3g6eG1wbWV0YT4KPD94cGFja2V0IGVuZD0ncic/PlS5dhwAACAASURBVHic7J0HeBTXvbdvypfETpzict1b7Ljl2mk3rtjGhWY6RjQVhACBAIGQACFRrNi5TnJ9426q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";
+
+
+  // ---------------- DATA ----------------
+  const events = [
+    {
+      id: 'e1', names: 'Amara & Chidi', type: 'Wedding', date: 'Mar 21 & 23, 2027',
+      stage: 'Active Planning', progress: 62, guests: '650', hashtag: '#AmaraMeetsChidi',
+      planningFeeOutstanding: 350000, fundsReceived: 8250000, vendorDueSoon: 2, daysToEvent: 118,
+      colours: 'Champagne, Ivory & Sage', authorisedEmails: ['amara@email.com', 'chidi@email.com'],
+      contact: '+234 802 555 0134', location: 'Lagos', venuePrimary: 'The Civic Centre, Victoria Island',
+      planningStart: 'May 12, 2026'
+    },
+    { id:'e2', names:'Titi Adenuga', type:'Birthday', date:'Dec 6, 2026', stage:'Active Planning', progress: 38, guests:'150', hashtag:'#Titi@40', planningFeeOutstanding: 150000, fundsReceived: 1200000, vendorDueSoon: 1, daysToEvent: 83, colours:'Emerald & Gold', authorisedEmails:['titi@email.com'], contact:'+234 803 555 0192', location:'Lagos', venuePrimary:'Radisson Blu Ikeja', planningStart:'Sep 1, 2026' },
+    { id:'e3', names:'Zenith Capital: Annual Conference', type:'Corporate Event', date:'Nov 14, 2026', stage:'Upcoming', progress: 20, guests:'400', hashtag:'None', planningFeeOutstanding: 900000, fundsReceived: 4000000, vendorDueSoon: 3, daysToEvent: 61, colours:'Navy & Silver', authorisedEmails:['events@zenithcapital.com'], contact:'+234 1 271 0045', location:'Lagos', venuePrimary:'Eko Convention Centre', planningStart:'Jul 1, 2026' },
+    { id:'e4', names:'Bello Family: 60th Anniversary', type:'Anniversary', date:'Jun 14, 2026', stage:'Completed', progress: 100, guests:'220', hashtag:'#60YearsOfBello', planningFeeOutstanding: 0, fundsReceived: 3100000, vendorDueSoon: 0, daysToEvent: -60, colours:'Burgundy & Cream', authorisedEmails:['funmi.bello@email.com'], contact:'+234 805 555 0110', location:'Ibadan', venuePrimary:'Premier Hotel', planningStart:'Jan 5, 2026' }
+  ];
+
+  const tasksAttention = [
+    { label: 'Confirm decor vendor for Amara & Chidi', priority: 'high', meta: 'Due in 3 days' },
+    { label: 'Follow up on caterer 2 quote for Amara & Chidi', priority: 'med', meta: 'Due in 6 days' },
+    { label: 'Send revised invoice to Titi Adenuga', priority: 'high', meta: 'Overdue 2 days' },
+    { label: 'Upload signed venue contract for Zenith Capital', priority: 'med', meta: 'Due in 9 days' },
+    { label: 'Update moodboard v2 status for Amara & Chidi', priority: 'low', meta: 'Due in 12 days' },
+  ];
+
+  const vendorMeetings = [
+    { label: 'Aesthetics walkthrough for Amara & Chidi', meta: 'Thu, 10:00 AM' },
+    { label: 'Caterer tasting for Titi Adenuga', meta: 'Fri, 1:00 PM' },
+    { label: 'AV production run through for Zenith Capital', meta: 'Mon, 3:30 PM' },
+  ];
+
+  // Budget for Amara & Chidi (e1), two components
+  const budget = {
+    'Wedding Reception': {
+      categories: [
+        {
+          name: 'Venue', total: 3450000, items: [
+            { name: 'Hall Hire', mode: 'single', amount: 3000000, paid: 3000000, balance: 0, vendor: 'The Civic Centre' },
+            { name: 'Event Clearance', mode: 'single', amount: 450000, paid: 450000, balance: 0, vendor: 'Lagos State' },
+          ]
+        },
+        {
+          name: 'Decor / Lighting / SFX', total: 9200000, items: [
+            {
+              name: 'Decor & Styling', mode: 'competing', amount: 9200000, paid: 2000000, balance: 7200000,
+              options: [
+                { vendor: 'Ladysan Events', amount: 9200000, includes: 'Full reception decor, floral arch, lounge sets', status: 'selected' },
+                { vendor: 'Ivie Crafts', amount: 7500000, includes: 'Reception decor only, no lounge', status: 'rejected' },
+                { vendor: 'Decor By AK', amount: 8000000, includes: 'Full decor, excludes floral arch', status: 'rejected' },
+              ]
+            }
+          ]
+        },
+        {
+          name: 'Entertainment', total: 3300000, items: [
+            { name: 'Live Band', mode: 'single', amount: 1800000, paid: 600000, balance: 1200000, vendor: 'SaxTee' },
+            { name: 'DJ', mode: 'single', amount: 1500000, paid: 1000000, balance: 500000, vendor: 'DJ E-touch' },
+          ]
+        },
+        {
+          name: 'Fine Dining', total: 8250000, items: [
+            {
+              name: 'Main Catering (650 guests)', mode: 'split', amount: 8250000, paid: 0, balance: 8250000,
+              allocations: [
+                { vendor: 'Kairee Catering', portion: '260 guests', amount: 3300000 },
+                { vendor: "Nueva's Kitchen", portion: '260 guests', amount: 3300000 },
+                { vendor: 'Ganit Catering', portion: '130 guests', amount: 1650000 },
+              ]
+            }
+          ]
+        },
+        {
+          name: 'Drinks', total: 2600000, items: [
+            {
+              name: 'Drinks Service & Management', mode: 'split', amount: 2600000, paid: 0, balance: 2600000,
+              allocations: [
+                { vendor: 'Drinks Sensation', portion: '400 guests', amount: 1600000 },
+                { vendor: 'Aplus Drinks', portion: '250 guests', amount: 1000000 },
+              ]
+            }
+          ]
+        },
+      ]
+    },
+    'Traditional Engagement': {
+      categories: [
+        { name: 'Venue', total: 900000, items: [ { name: 'Hall Hire', mode:'single', amount: 900000, paid: 900000, balance: 0, vendor: 'The Anthonia' } ] },
+        { name: 'Engagement Area', total: 600000, items: [ { name: 'Alaga Iduro & Ijoko', mode:'single', amount: 600000, paid: 450000, balance: 150000, vendor: 'Damilola the Alaga' } ] },
+      ]
+    }
+  };
+
+  // Planning Schedule for Amara & Chidi, matches the seeded Wedding template
+  const planningSchedule = [
+    {
+      name: 'Wedding Framework', focusPoint: 'The Foundation Phase', anchor: 'Starts at Planning Start', progress: 100,
+      explanation: "Laying the groundwork: logo, venue, theme, moodboard, budget.",
+      tasks: [
+        { label: "Planner's contract & booking deposit", status: 'done', priority: 'high' },
+        { label: 'Venue sourcing, review of terms & booking', status: 'done', priority: 'high' },
+        { label: 'Logo/hashtag creation', status: 'done', priority: 'low' },
+        { label: 'Save the Date creation', status: 'done', priority: 'med' },
+        { label: 'Selection of wedding theme & colours', status: 'done', priority: 'med' },
+        { label: 'Moodboard creation', status: 'done', priority: 'med' },
+        { label: 'Budget creation', status: 'done', priority: 'high' },
+      ]
+    },
+    {
+      name: 'Building the "A" Team', focusPoint: 'Selection & booking of priority vendors', anchor: '~60 days after Planning Start', progress: 60,
+      explanation: 'Book earliest whoever has the highest impact if wrong and scarcity risk. Decor, media, entertainment, and styling/production all sit here for the same lead time reasoning.',
+      tasks: [
+        { label: 'Aesthetics partners (decorator, lighting/SFX, rentals)', status: 'inprogress', priority: 'high' },
+        { label: 'Media team (photographer, videographer, content creator)', status: 'done', priority: 'high' },
+        { label: 'Entertainment crew (live band, DJ, MC)', status: 'done', priority: 'high' },
+        { label: 'Bridal/groom styling team (stylist, MUA, hairstylist)', status: 'inprogress', priority: 'high' },
+      ]
+    },
+    {
+      name: 'The Banqueting/Confectionery Team', focusPoint: 'Selection & booking of all food & drinks vendors', anchor: '~120 days after Planning Start', progress: 20,
+      explanation: 'Comes after the "A" Team tier. Food & drinks are not scarcity critical in the same way.',
+      tasks: [
+        { label: 'Wedding cake', status: 'inprogress', priority: 'med' },
+        { label: 'Main food vendor', status: 'notstarted', priority: 'high' },
+        { label: 'Drinks', status: 'notstarted', priority: 'med' },
+        { label: 'Smallchops / fingerfoods', status: 'notstarted', priority: 'low' },
+      ]
+    },
+    {
+      name: 'Guest Management Team', focusPoint: 'Invitations, access cards & front-of-house staff', anchor: '~180 days after Planning Start', progress: 0,
+      explanation: 'Logistics & accommodation are folded in here rather than getting a dedicated phase.',
+      tasks: [
+        { label: 'Invitation/access card design, production & distribution', status: 'notstarted', priority: 'high' },
+        { label: 'Guestlist creation', status: 'notstarted', priority: 'med' },
+        { label: 'Hostesses, bouncers, LASTMA', status: 'notstarted', priority: 'med' },
+        { label: 'Accommodation & transport logistics', status: 'notstarted', priority: 'low' },
+      ]
+    },
+    {
+      name: 'Afterparty Planning', focusPoint: 'All things afterparty', anchor: '~180 days after Planning Start', progress: 0,
+      tasks: [
+        { label: 'Afterparty props', status: 'notstarted', priority: 'low' },
+        { label: 'DJ/hypeman (if different from main event)', status: 'notstarted', priority: 'med' },
+        { label: 'Lounge sets/afterparty lighting', status: 'notstarted', priority: 'low' },
+      ]
+    },
+    {
+      name: 'The Coordination Phase', focusPoint: 'Actual "planning" is done. Time to execute', anchor: 'Starts when Phase 2 reaches ~90% complete', progress: 0,
+      explanation: 'Triggers off "A" Team completion, not a fixed calendar date.',
+      tasks: [
+        { label: 'Scheduling pre-wedding shoot', status: 'notstarted', priority: 'med' },
+        { label: 'Creation of the coordination checklist', status: 'notstarted', priority: 'high' },
+        { label: 'Event flow / food flow', status: 'notstarted', priority: 'high' },
+        { label: 'Floorplan', status: 'notstarted', priority: 'med' },
+      ]
+    },
+    {
+      name: 'Vendor Meeting', focusPoint: 'Final vendor walkthrough at the venue', anchor: 'Fixed: 18 days before Event Date', progress: 0,
+      explanation: 'Stays fixed at ~2–3 weeks before the event regardless of total planning length.',
+      tasks: [
+        { label: 'Vendors meeting at the venue', status: 'notstarted', priority: 'high' },
+      ]
+    },
+  ];
+
+  // Vendor Directory for Amara & Chidi
+  const vendorDirectory = [
+    { category: 'Decor / Lighting / SFX', businessName: 'Ladysan Events', status: 'active', linkedItem: 'Decor & Styling',
+      contacts: [ { name: 'Bisi Ladipo', role: 'Account Lead', phone: '0803 555 0021', current: true },
+                  { name: 'Tayo Fashina', role: 'Former Account Lead', phone: '0803 555 0099', current: false } ] },
+    { category: 'Fine Dining', businessName: 'Kairee Catering', status: 'active', linkedItem: 'Main Catering (split: 260 guests)',
+      contacts: [ { name: 'Mrs. Kairee', role: 'Owner', phone: '0805 555 0110', current: true } ] },
+    { category: 'Fine Dining', businessName: "Nueva's Kitchen", status: 'active', linkedItem: 'Main Catering (split: 260 guests)',
+      contacts: [ { name: 'Chef Nuela', role: 'Owner', phone: '0806 555 0187', current: true } ] },
+    { category: 'Fine Dining', businessName: 'Ganit Catering', status: 'active', linkedItem: 'Main Catering (split: 130 guests)',
+      contacts: [ { name: 'Ganiyu Adisa', role: 'Operations', phone: '0807 555 0142', current: true } ] },
+    { category: 'Entertainment', businessName: 'SaxTee', status: 'active', linkedItem: 'Live Band',
+      contacts: [ { name: 'Saxon T.', role: 'Band Lead', phone: '0803 555 0071', current: true } ] },
+    { category: 'Entertainment', businessName: 'DJ E-touch', status: 'active', linkedItem: 'DJ',
+      contacts: [ { name: 'E-touch', role: 'Self', phone: '0802 555 0063', current: true } ] },
+    { category: 'Drinks', businessName: 'Drinks Sensation', status: 'active', linkedItem: 'Drinks Service (split: 400 guests)',
+      contacts: [ { name: 'Femi Okoro', role: 'Sales', phone: '0809 555 0134', current: true } ] },
+  ];
+
+  // Global vendor directory — same businesses as above, plus a few booked on
+  // other events, tagged with which event + category so the Vendors sidebar
+  // item reads across the whole book of business rather than one event.
+  const globalVendorDirectory = [
+    { category: 'Decor / Lighting / SFX', businessName: 'Ladysan Events', eventNames: 'Amara & Chidi', contactName: 'Bisi Ladipo', phone: '0803 555 0021', status: 'active' },
+    { category: 'Fine Dining', businessName: 'Kairee Catering', eventNames: 'Amara & Chidi', contactName: 'Mrs. Kairee', phone: '0805 555 0110', status: 'active' },
+    { category: 'Fine Dining', businessName: "Nueva's Kitchen", eventNames: 'Amara & Chidi', contactName: 'Chef Nuela', phone: '0806 555 0187', status: 'active' },
+    { category: 'Fine Dining', businessName: 'Ganit Catering', eventNames: 'Amara & Chidi', contactName: 'Ganiyu Adisa', phone: '0807 555 0142', status: 'active' },
+    { category: 'Entertainment', businessName: 'SaxTee', eventNames: 'Amara & Chidi', contactName: 'Saxon T.', phone: '0803 555 0071', status: 'active' },
+    { category: 'Entertainment', businessName: 'DJ E-touch', eventNames: 'Amara & Chidi, Titi Adenuga', contactName: 'E-touch', phone: '0802 555 0063', status: 'active' },
+    { category: 'Drinks', businessName: 'Drinks Sensation', eventNames: 'Amara & Chidi', contactName: 'Femi Okoro', phone: '0809 555 0134', status: 'active' },
+    { category: 'Photography', businessName: 'Framed By Tolu', eventNames: 'Titi Adenuga', contactName: 'Tolu Afolabi', phone: '0804 555 0177', status: 'active' },
+    { category: 'Venue', businessName: 'Eko Convention Centre', eventNames: 'Zenith Capital: Annual Conference', contactName: 'Events Desk', phone: '0701 271 0045', status: 'active' },
+    { category: 'AV / Production', businessName: 'Soundscape Productions', eventNames: 'Zenith Capital: Annual Conference', contactName: 'Jide Balogun', phone: '0808 555 0210', status: 'considering' },
+    { category: 'Fine Dining', businessName: 'Kairee Catering', eventNames: 'Bello Family: 60th Anniversary', contactName: 'Mrs. Kairee', phone: '0805 555 0110', status: 'active' },
+  ];
+
+  // Event types — mirrors prisma/seed.ts. Only Wedding has real template
+  // content behind it so far; the rest share the same mechanism with
+  // nothing templated yet, which is the confirmed Phase 1 scope.
+  const eventTypesList = [
+    { name: 'Wedding', hasTemplate: true, templateName: 'Standard Wedding Template v1', phaseCount: 7 },
+    { name: 'Traditional Wedding', hasTemplate: false },
+    { name: 'Birthday', hasTemplate: false },
+    { name: 'Anniversary', hasTemplate: false },
+    { name: 'Corporate Event', hasTemplate: false },
+    { name: 'Private Celebration', hasTemplate: false },
+    { name: 'Dinner', hasTemplate: false },
+    { name: 'Conference', hasTemplate: false },
+    { name: 'Product Launch', hasTemplate: false },
+    { name: 'Custom Event', hasTemplate: false, isCustom: true },
+  ];
+
+  // Team — mirrors the backend's AdminUser model. theeventsmithng@gmail.com
+  // is the permanent, protected super admin (see backend README) — only
+  // that account can add team members or authorise client emails.
+  let teamMembers = [
+    { id: 'a1', name: 'The EventSmith NG', email: 'theeventsmithng@gmail.com', tier: 'SUPER_ADMIN', isActive: true, isProtected: true, addedBy: null },
+    { id: 'a2', name: 'Peace Adeyemi', email: 'peace@theeventsmithng.com', tier: 'SENIOR', isActive: true, isProtected: false, addedBy: 'The EventSmith NG' },
+    { id: 'a3', name: 'Tobi Fashina', email: 'tobi@theeventsmithng.com', tier: 'JUNIOR', isActive: true, isProtected: false, addedBy: 'The EventSmith NG' },
+  ];
+
+  // Event Funds Ledger for Amara & Chidi, demonstrates one payment split across purposes
+  const fundsLedger = [
+    { payer: 'Amara (Bride)', amount: 1000000, date: 'Jul 3, 2026', reference: 'GTB-88213',
+      allocations: [ { purpose: 'Content Creator', amount: 450000 }, { purpose: 'Wedding Cake', amount: 550000 } ] },
+    { payer: 'Chidi (Groom)', amount: 2000000, date: 'Jul 18, 2026', reference: 'Zenith-77120',
+      allocations: [ { purpose: 'Decor & Styling deposit', amount: 2000000 } ] },
+    { payer: 'Parents', amount: 1500000, date: 'Aug 2, 2026', reference: 'Cash',
+      allocations: [ { purpose: 'Live Band deposit', amount: 600000 }, { purpose: 'DJ deposit', amount: 500000 }, { purpose: 'Photography deposit', amount: 400000 } ] },
+  ];
+  const fundsTotalReceived = fundsLedger.reduce((s,f)=>s+f.amount,0);
+  const fundsTotalAllocated = fundsLedger.reduce((s,f)=>s+f.allocations.reduce((s2,a)=>s2+a.amount,0),0);
+  const fundsTotalDisbursed = 3550000; // demo: amount actually paid out to vendors so far
+
+  // Itinerary for Amara & Chidi
+  let itinerary = [
+    { time: '2:00 PM', activity: 'Guest arrival & seating', location: 'Main Hall', vendors: ['Hostesses', 'Ushers'], coordinator: 'Coordinator A', status: 'notstarted' },
+    { time: '3:00 PM', activity: 'Couple grand entrance', location: 'Main Hall', vendors: ['MC', 'DJ', 'Live Band', 'Lighting/SFX'], coordinator: 'Coordinator A', status: 'notstarted' },
+    { time: '3:45 PM', activity: 'Toasts & speeches', location: 'Main Hall', vendors: ['MC', 'AV Team'], coordinator: 'Coordinator B', status: 'notstarted' },
+    { time: '4:30 PM', activity: 'Cake cutting', location: 'Main Hall', vendors: ['Photography', 'Videography'], coordinator: 'Coordinator A', status: 'notstarted' },
+    { time: '5:00 PM', activity: 'Dinner service', location: 'Main Hall', vendors: ['Kairee Catering', "Nueva's Kitchen", 'Ganit Catering'], coordinator: 'Coordinator B', status: 'notstarted' },
+    { time: '7:00 PM', activity: 'First dance & party', location: 'Main Hall', vendors: ['DJ', 'Live Band'], coordinator: 'Coordinator A', status: 'notstarted' },
+    { time: '9:30 PM', activity: 'Afterparty transition', location: 'Lounge', vendors: ['Afterparty Props', 'DJ'], coordinator: 'Coordinator C', status: 'notstarted' },
+  ];
+
+  // Documents for Amara & Chidi
+  const documents = {
+    'Moodboard': [
+      { name: 'Moodboard.pdf', visible: true, versions: [
+        { label: 'Version 1', date: 'May 30, 2026', note: 'Initial concept', approved: false },
+        { label: 'Version 2', date: 'Jun 18, 2026', note: 'Revised palette to sage', approved: true },
+      ]}
+    ],
+    'Planning Contract & Invoices': [
+      { name: 'Planning Contract.pdf', visible: true, versions: [ { label: 'Version 1', date: 'May 12, 2026', note: 'Signed', approved: true } ] },
+      { name: 'Invoice, Instalment 2.pdf', visible: true, versions: [ { label: 'Version 1', date: 'Jul 15, 2026', note: '', approved: true } ] },
+    ],
+    'Vendor Contracts & Quotes': [
+      { name: 'Ladysan Decor Quote.pdf', visible: false, versions: [ { label: 'Version 1', date: 'Jun 2, 2026', note: '', approved: false } ] },
+      { name: 'Kairee Catering Contract.pdf', visible: false, versions: [ { label: 'Version 1', date: 'Jul 4, 2026', note: '', approved: true } ] },
+    ],
+    'Floor Plans & Seating': [
+      { name: 'Venue Floor Plan.pdf', visible: true, versions: [ { label: 'Version 1', date: 'Jun 10, 2026', note: '', approved: true } ] },
+    ],
+  };
+
+  // Notes for Amara & Chidi
+  const notesData = [
+    { category: 'Client Request', author: 'Peace', date: 'Aug 2, 2026', content: 'Bride prefers sage over emerald for the aesthetics. Confirm with decor vendor before final mockup.' },
+    { category: 'Vendor Conversation', author: 'Peace', date: 'Jul 28, 2026', content: 'Ladysan confirmed frontline truss can be delivered a day early for setup buffer, no extra cost.' },
+    { category: 'Decision', author: 'Peace', date: 'Jul 20, 2026', content: 'Agreed to split catering across three vendors given 650 guest count. See Budget for allocation.' },
+    { category: 'Meeting Notes', author: 'Peace', date: 'Jul 10, 2026', content: 'Walkthrough with couple. Confirmed hashtag, colours, and afterparty scope.' },
+    { category: 'Reminder', author: 'Peace', date: 'Jun 30, 2026', content: 'Follow up with groom on outstanding styling deposit before September.' },
+  ];
+
+  // Activity Log for Amara & Chidi
+  const activityData = [
+    { icon: '₦', text: 'Payment received from client: <b>₦1,500,000</b> from Parents', time: 'Aug 2, 2026 · 11:04 AM' },
+    { icon: '✓', text: 'Vendor selected: <b>Ladysan Events</b> for Decor & Styling', time: 'Jul 22, 2026 · 3:40 PM' },
+    { icon: '◎', text: 'Decision logged: catering split across three vendors', time: 'Jul 20, 2026 · 9:15 AM' },
+    { icon: '⌗', text: 'Moodboard replaced: <b>Version 2</b> uploaded and approved', time: 'Jun 18, 2026 · 2:00 PM' },
+    { icon: '◆', text: 'Event created from Wedding template', time: 'May 12, 2026 · 10:00 AM' },
+  ];
+
+  // ---------------- STATE ----------------
+  let state = {
+    view: 'login', loginStep: 'email', filter: 'Upcoming', activeEvent: null, eventTab: 'overview',
+    component: 'Wedding Reception', paymentsSubtab: 'funds',
+    currentUser: null,          // set at login — { name, email, tier, isActive, isProtected }
+    eventsFilter: 'All',        // Events (sidebar) view filter
+    openTemplate: 'Wedding',    // Templates view, which type is expanded
+    teamAccessEvent: null,      // Team view, which event's client emails are shown
+    showAddTeamForm: false,
+    showAddClientForm: false,
+    modal: null,                // 'createEvent' when the Create Event modal is open
+    createEventType: null,      // step 1 selection inside the Create Event modal
+    live: false,                // true once syncWithBackend() found a real API to talk to
+  };
+
+  function isSuperAdmin(){ return !!(state.currentUser && state.currentUser.tier === 'SUPER_ADMIN'); }
+
+  function fmt(n){ return '₦' + Number(n).toLocaleString('en-NG'); }
+
+  function initials(name){
+    if(!name) return 'PL';
+    const parts = name.trim().split(/\s+/);
+    return ((parts[0]||'')[0] + (parts[1] ? parts[1][0] : (parts[0]||'')[1] || '')).toUpperCase();
+  }
+
+  function tierLabel(tier){
+    if(tier === 'SUPER_ADMIN') return 'Super Admin';
+    if(tier === 'JUNIOR') return 'Junior Planner';
+    if(tier === 'SENIOR') return 'Senior Planner';
+    return 'Planner';
+  }
+
+  function toast(msg){
+    const t = document.getElementById('tesToast');
+    if(!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=> t.classList.remove('show'), 2200);
+  }
+
+  // ---------------- LIVE BACKEND CLIENT ----------------
+  // This file is still a standalone prototype — it has no build step and no
+  // server of its own. When it's eventually dropped into the Next.js app
+  // (see the backend scaffold's README) at a path the API routes also live
+  // under, every call below resolves against the same origin and talks to
+  // the real database. Until then — opened directly as a file, or hosted
+  // somewhere without the backend behind it — every call fails fast (no
+  // matching route / no network) and the UI falls back to the in-memory
+  // demo data it always used, so the prototype keeps working for a client
+  // walkthrough either way. `state.live` records which mode is actually in
+  // effect so the UI can be honest about it rather than pretending.
+  const API_BASE = (typeof window !== 'undefined' && window.TES_API_BASE) || '';
+
+  async function apiCall(path, options){
+    try {
+      const res = await fetch(API_BASE + path, Object.assign({
+        headers: { 'Content-Type': 'application/json' },
+      }, options || {}));
+      let body = null;
+      try { body = await res.json(); } catch (e) { /* no JSON body, fine for some 2xx responses */ }
+      if(!res.ok) return { ok: false, status: res.status, error: (body && body.error) || ('Request failed (' + res.status + ')') };
+      return { ok: true, status: res.status, data: body };
+    } catch (err) {
+      // Network/CORS failure — most likely because there's no live backend
+      // at this origin yet. Not an error to surface to the person using the
+      // prototype, just a signal to keep using demo data.
+      return { ok: false, status: 0, error: 'offline' };
+    }
+  }
+
+  const tesApi = {
+    requestCode: (email) => apiCall('/api/auth/request-code', { method: 'POST', body: JSON.stringify({ email }) }),
+    verifyCode: (email, code) => apiCall('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ email, code }) }),
+    listEvents: () => apiCall('/api/events', { method: 'GET' }),
+    createEvent: (payload) => apiCall('/api/events', { method: 'POST', body: JSON.stringify(payload) }),
+    listTeam: () => apiCall('/api/admin/team', { method: 'GET' }),
+    addTeam: (payload) => apiCall('/api/admin/team', { method: 'POST', body: JSON.stringify(payload) }),
+    patchTeam: (payload) => apiCall('/api/admin/team', { method: 'PATCH', body: JSON.stringify(payload) }),
+    listClientEmails: (eventId) => apiCall('/api/admin/client-emails?eventId=' + encodeURIComponent(eventId), { method: 'GET' }),
+    addClientEmail: (email, eventId) => apiCall('/api/admin/client-emails', { method: 'POST', body: JSON.stringify({ email, eventId }) }),
+    revokeClientEmail: (id) => apiCall('/api/admin/client-emails?id=' + encodeURIComponent(id), { method: 'DELETE' }),
+  };
+
+  // Maps a real Event row (from GET /api/events) onto the shape this
+  // prototype's views already expect, so dashboardView/eventsView/etc. don't
+  // need to know whether they're looking at demo or real data.
+  function mapApiEvent(e, i){
+    const guestsTotal = (e.components || []).reduce((s,c) => s + (c.guestCount || 0), 0);
+    return {
+      id: e.id, names: e.names, type: (e.eventType && e.eventType.name) || 'Event',
+      date: e.components && e.components[0] && e.components[0].date ? new Date(e.components[0].date).toDateString() : 'Date to be confirmed',
+      stage: e.stage === 'UPCOMING' ? 'Upcoming' : (e.stage === 'ACTIVE_PLANNING' ? 'Active Planning' : 'Completed'),
+      progress: 0, guests: guestsTotal || (e.expectedGuests || '—'), hashtag: e.hashtag || 'None',
+      planningFeeOutstanding: 0, fundsReceived: 0, vendorDueSoon: 0, daysToEvent: 0,
+      colours: e.colours || 'To be confirmed',
+      authorisedEmails: (e.authorisedEmails || []).map(a => a.email),
+      contact: e.contactInfo || '—', location: e.location || '—',
+      venuePrimary: e.primaryVenue || 'To be confirmed',
+      planningStart: e.planningStartDate ? new Date(e.planningStartDate).toDateString() : '—',
+    };
+  }
+
+  // Tries the real backend once at startup (after login) and swaps the
+  // in-memory demo arrays for real data if it answers. Safe to call more
+  // than once — each call just re-syncs.
+  async function syncWithBackend(){
+    const evRes = await tesApi.listEvents();
+    if(evRes.ok && Array.isArray(evRes.data)){
+      state.live = true;
+      events.length = 0;
+      evRes.data.forEach((e,i) => events.push(mapApiEvent(e,i)));
+    } else {
+      state.live = false;
+    }
+
+    if(state.live){
+      const teamRes = await tesApi.listTeam();
+      if(teamRes.ok && Array.isArray(teamRes.data)){
+        teamMembers.length = 0;
+        teamRes.data.forEach(m => teamMembers.push({
+          id: m.id, name: m.name, email: m.email, tier: m.tier,
+          isActive: m.isActive, isProtected: m.isProtected, addedBy: null,
+        }));
+      }
+    }
+  }
+
+  // ---------------- RENDER ----------------
+  function render(){
+    const root = document.getElementById('tesRoot');
+    if(state.view === 'login'){
+      root.innerHTML = `<div class="tes-app tes-app--full">${loginView()}<div class="tes-toast" id="tesToast"></div></div>`;
+    } else if(state.view === 'client'){
+      root.innerHTML = `<div class="tes-app tes-app--full">${clientView()}<div class="tes-toast" id="tesToast"></div></div>`;
+    } else {
+      let mainContent;
+      if(state.view === 'dashboard') mainContent = dashboardView();
+      else if(state.view === 'events') mainContent = eventsView();
+      else if(state.view === 'templates') mainContent = templatesView();
+      else if(state.view === 'team') mainContent = teamView();
+      else if(state.view === 'vendors') mainContent = vendorsView();
+      else if(state.view === 'settings') mainContent = settingsView();
+      else mainContent = workspaceView();
+
+      root.innerHTML = `
+        <div class="tes-app">
+          ${sidebar()}
+          <div class="tes-main">
+            ${mainContent}
+          </div>
+          <div class="tes-toast" id="tesToast"></div>
+          ${state.modal === 'createEvent' ? createEventModal() : ''}
+        </div>
+      `;
+    }
+    attachHandlers();
+  }
+
+  function loginView(){
+    if(state.loginStep === 'email'){
+      return `
+        <div class="tes-login-page">
+          <div class="tes-login-card">
+            <div class="tes-login-mark"><img src="${LOGO}" alt="The EventSmith NG logo"></div>
+            <div class="tes-login-title serif">Sign in</div>
+            <div class="tes-login-sub">Enter your email and we'll send you a one-time code.</div>
+            <input class="tes-login-input" type="email" placeholder="you@email.com" id="loginEmail">
+            <button class="tes-btn tes-login-btn" data-action="send-code">Send code</button>
+            <div class="tes-login-foot">No passwords here, just a code sent to your inbox.</div>
+          </div>
+        </div>
+      `;
+    }
+    return `
+      <div class="tes-login-page">
+        <div class="tes-login-card">
+          <div class="tes-login-mark"><img src="${LOGO}" alt="The EventSmith NG logo"></div>
+          <div class="tes-login-title serif">Enter your code</div>
+          <div class="tes-login-sub">We sent a 6-digit code to your email. It expires in 10 minutes.</div>
+          <input class="tes-login-input" type="text" maxlength="6" placeholder="• • • • • •" id="loginCode">
+          <button class="tes-btn tes-login-btn" data-action="verify-code">Verify &amp; sign in</button>
+          <div class="tes-login-foot">Didn't get it? <a data-action="resend-code">Resend code</a></div>
+          <div class="tes-login-back" data-action="login-back">← Use a different email</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function clientView(){
+    const e = events.find(ev => ev.id === state.activeEvent) || events[0];
+    return `
+      <div class="tes-client-page">
+        <div class="tes-client-inner">
+          <div class="tes-client-topbar">
+            <span class="tes-client-admin-link" data-action="back-to-admin">← Back to admin (preview only)</span>
+            <span class="tes-client-admin-link">${e.type}</span>
+          </div>
+          <div class="tes-client-hero">
+            <div class="tes-client-mark"><img src="${LOGO}" alt="The EventSmith NG logo"></div>
+            <div class="tes-client-names serif">${e.names}</div>
+            <div class="tes-client-date">${e.date} · ${e.venuePrimary}</div>
+            <div class="tes-client-countdown">${e.daysToEvent >= 0 ? e.daysToEvent + ' days to your event' : 'Event complete'}</div>
+          </div>
+
+          <div class="tes-client-section">
+            <div class="tes-client-section-title">Current moodboard</div>
+            <div class="tes-moodboard-frame">Moodboard_v2.pdf: <span class="tes-status-tag selected" style="display:inline-block;">Approved</span></div>
+          </div>
+
+          <div class="tes-client-section">
+            <div class="tes-client-section-title">Planning progress</div>
+            <div class="tes-progress-track"><div class="tes-progress-fill" style="width:${e.progress}%"></div></div>
+            <div class="tes-progress-label"><span>Current phase: Building the "A" Team</span><span>${e.progress}%</span></div>
+          </div>
+
+          <div class="tes-client-section">
+            <div class="tes-client-section-title">Upcoming milestones</div>
+            <div class="tes-client-milestone"><span class="tes-dot done"></span>Venue booked &amp; contract signed</div>
+            <div class="tes-client-milestone"><span class="tes-dot done"></span>Moodboard approved</div>
+            <div class="tes-client-milestone"><span class="tes-dot med"></span>Decor &amp; styling vendor confirmation</div>
+            <div class="tes-client-milestone"><span class="tes-dot low"></span>Catering tasting session</div>
+          </div>
+
+          <div class="tes-client-section">
+            <div class="tes-client-section-title">Planning fee status</div>
+            <div class="tes-client-fee-value">${fmt(e.planningFeeOutstanding)}</div>
+            <div style="font-size:12px; color:var(--ink-muted); margin-top:2px;">outstanding on your planning contract</div>
+          </div>
+
+          <div class="tes-client-section">
+            <div class="tes-client-section-title">Shared with you</div>
+            <div class="tes-client-fact-grid">
+              <div class="tes-fact-value">Planning Contract.pdf</div>
+              <div class="tes-fact-value">Invoice, Instalment 2.pdf</div>
+              <div class="tes-fact-value">Save the Date.pdf</div>
+              <div class="tes-fact-value">Venue Floor Plan.pdf</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function sidebar(){
+    const items = [
+      { key: 'dashboard', label: 'Dashboard', icon: '◆' },
+      { key: 'events', label: 'Events', icon: '▤' },
+      { key: 'templates', label: 'Templates', icon: '⌗' },
+      { key: 'team', label: 'Team', icon: '◎' },
+      { key: 'vendors', label: 'Vendors', icon: '✦' },
+      { key: 'settings', label: 'Settings', icon: '⚙' },
+    ];
+    return `
+      <div class="tes-sidebar">
+        <div class="tes-logo-row">
+          <div class="tes-logo-mark"><img src="${LOGO}" alt="The EventSmith NG logo"></div>
+          <div class="tes-logo-text">The EventSmith NG<small>Admin Platform</small></div>
+        </div>
+        <div style="margin:-6px 0 14px 0; padding-left:2px;">
+          <span style="font-size:9.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; padding:3px 8px; border-radius:20px; ${state.live ? 'background:rgba(95,112,82,0.25); color:#B9CBA8;' : 'background:rgba(239,231,217,0.12); color:#C9B79C;'}">${state.live ? 'Live data' : 'Demo data'}</span>
+        </div>
+        <div class="tes-nav">
+          ${items.map(it => `
+            <button class="tes-nav-item ${state.view === it.key || (it.key==='dashboard' && state.view==='dashboard') ? 'active' : ''}" data-nav="${it.key}">
+              <span class="tes-nav-icon">${it.icon}</span>${it.label}
+            </button>
+          `).join('')}
+        </div>
+        <div class="tes-sidebar-footer">
+          <div class="tes-avatar-sm">${initials(state.currentUser && state.currentUser.name)}</div>
+          <div>
+            <div>${(state.currentUser && state.currentUser.name) || 'Planner'}</div>
+            <div style="font-size:10.5px; color:#C9B79C; font-weight:500;">${tierLabel(state.currentUser && state.currentUser.tier)}</div>
+          </div>
+        </div>
+        <button class="tes-nav-item" data-action="preview-client" style="margin-top:10px; border-top:1px solid rgba(239,231,217,0.14); border-radius:0; padding-top:14px;">
+          <span class="tes-nav-icon">⇢</span>Preview client dashboard
+        </button>
+      </div>
+    `;
+  }
+
+  function dashboardView(){
+    const filters = ['Upcoming','Active Planning','Completed'];
+    const filtered = state.filter === 'Upcoming'
+      ? events.filter(e => e.stage !== 'Completed')
+      : events.filter(e => e.stage === state.filter);
+
+    const totalOutstanding = events.reduce((s,e)=> s + e.planningFeeOutstanding, 0);
+    const totalDueSoon = events.reduce((s,e)=> s + e.vendorDueSoon, 0);
+    const totalFunds = events.reduce((s,e)=> s + e.fundsReceived, 0);
+
+    return `
+      <div class="tes-topbar">
+        <div>
+          <h1 class="tes-page-title">Business Dashboard</h1>
+          <div class="tes-page-sub">An overview of every event currently on the books.</div>
+        </div>
+        <button class="tes-btn" data-action="create-event">+ Create New Event</button>
+      </div>
+      <div class="tes-content">
+        <div class="tes-kpi-row">
+          <div class="tes-kpi"><div class="tes-kpi-label">Active events</div><div class="tes-kpi-value">${events.filter(e=>e.stage!=='Completed').length}</div></div>
+          <div class="tes-kpi"><div class="tes-kpi-label">Outstanding planning fees</div><div class="tes-kpi-value warn">${fmt(totalOutstanding)}</div></div>
+          <div class="tes-kpi"><div class="tes-kpi-label">Vendor payments due soon</div><div class="tes-kpi-value danger">${totalDueSoon}</div></div>
+          <div class="tes-kpi"><div class="tes-kpi-label">Event funds received (all events)</div><div class="tes-kpi-value">${fmt(totalFunds)}</div></div>
+          <div class="tes-kpi"><div class="tes-kpi-label">Upcoming vendor meetings</div><div class="tes-kpi-value">${vendorMeetings.length}</div></div>
+        </div>
+
+        <div class="tes-filterbar">
+          ${filters.map(f => `<button class="tes-chip ${state.filter===f?'active':''}" data-filter="${f}">${f}</button>`).join('')}
+        </div>
+
+        <div class="tes-events-grid">
+          ${filtered.map(e => eventCard(e)).join('')}
+        </div>
+
+        <div class="tes-dash-grid">
+          <div class="tes-panel">
+            <div class="tes-panel-title">Tasks requiring attention</div>
+            ${tasksAttention.map(t => `
+              <div class="tes-task-row">
+                <span class="tes-dot ${t.priority}"></span>
+                ${t.label}
+                <span class="tes-task-meta">${t.meta}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div class="tes-panel">
+            <div class="tes-panel-title">Upcoming vendor meetings</div>
+            ${vendorMeetings.map(v => `
+              <div class="tes-task-row">${v.label}<span class="tes-task-meta">${v.meta}</span></div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function eventCard(e){
+    const stagePillClass = e.stage === 'Completed' ? '' : (e.vendorDueSoon > 1 ? 'warn' : '');
+    return `
+      <div class="tes-event-card" data-open-event="${e.id}">
+        <div class="tes-event-card-top">
+          <div>
+            <div class="tes-event-name">${e.names}</div>
+            <div class="tes-event-type">${e.type} · ${e.date}</div>
+          </div>
+          <span class="tes-stage-pill ${stagePillClass}">${e.stage}</span>
+        </div>
+        <div class="tes-event-meta">
+          <div>Guests <b>${e.guests}</b></div>
+          <div>Funds received <b>${fmt(e.fundsReceived)}</b></div>
+          <div>Fee balance <b>${fmt(e.planningFeeOutstanding)}</b></div>
+        </div>
+        <div class="tes-progress-track"><div class="tes-progress-fill" style="width:${e.progress}%"></div></div>
+        <div class="tes-progress-label"><span>Planning progress</span><span>${e.progress}%</span></div>
+      </div>
+    `;
+  }
+
+  // ---------------- EVENTS (sidebar, full list) ----------------
+  function eventsView(){
+    const filters = ['All','Upcoming','Active Planning','Completed'];
+    const filtered = state.eventsFilter === 'All' ? events : events.filter(e => e.stage === state.eventsFilter);
+    return `
+      <div class="tes-topbar">
+        <div>
+          <h1 class="tes-page-title">Events</h1>
+          <div class="tes-page-sub">Every event on the books, across every stage.</div>
+        </div>
+        <button class="tes-btn" data-action="create-event">+ Create New Event</button>
+      </div>
+      <div class="tes-content">
+        <div class="tes-filterbar">
+          ${filters.map(f => `<button class="tes-chip ${state.eventsFilter===f?'active':''}" data-eventsfilter="${f}">${f}</button>`).join('')}
+        </div>
+        <div class="tes-panel">
+          ${filtered.map(e => `
+            <div class="tes-list-row" data-open-event="${e.id}" style="cursor:pointer;">
+              <div class="tes-list-main">
+                <div class="tes-list-title">${e.names}</div>
+                <div class="tes-list-sub">${e.type} · ${e.date} · ${e.location}</div>
+              </div>
+              <span class="tes-stage-pill ${e.stage==='Completed' ? '' : (e.vendorDueSoon>1?'warn':'')}">${e.stage}</span>
+              <div style="width:120px; text-align:right; font-weight:600;">${fmt(e.fundsReceived)}</div>
+              <div style="width:90px; text-align:right; color:var(--ink-muted); font-size:12px;">${e.progress}% planned</div>
+            </div>
+          `).join('') || `<div class="tes-placeholder">No events in this view yet.</div>`}
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------------- TEMPLATES ----------------
+  function templatesView(){
+    return `
+      <div class="tes-topbar">
+        <div>
+          <h1 class="tes-page-title">Templates</h1>
+          <div class="tes-page-sub">One template mechanism, shared by every event type. Only Wedding has real content behind it so far.</div>
+        </div>
+      </div>
+      <div class="tes-content">
+        <div class="tes-panel">
+          ${eventTypesList.map(t => `
+            <div>
+              <div class="tes-list-row" data-template-toggle="${t.name}" style="cursor:pointer;">
+                <div class="tes-list-main">
+                  <div class="tes-list-title">${t.name}${t.isCustom ? ' <span style="font-weight:400; color:var(--ink-muted); font-size:12px;">(built per brief)</span>' : ''}</div>
+                  <div class="tes-list-sub">${t.hasTemplate ? t.templateName + ' · ' + t.phaseCount + ' phases' : 'Mechanism ready — no content templated yet'}</div>
+                </div>
+                <span class="tes-status-tag ${t.hasTemplate ? 'selected' : 'considering'}">${t.hasTemplate ? 'Templated' : 'Not yet'}</span>
+                <span class="tes-caret ${state.openTemplate===t.name?'open':''}">▸</span>
+              </div>
+              ${state.openTemplate === t.name ? templateDetail(t) : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function templateDetail(t){
+    if(!t.hasTemplate){
+      return `<div class="tes-banner" style="margin:0 0 10px 0;">No phases, vendor categories, or budget categories have been templated for ${t.name} yet. The mechanism (phases, anchors, vendor tiers, budget categories, document folders) is identical to Wedding's — it just needs real content from a completed ${t.name.toLowerCase()} to build from.</div>`;
+    }
+    return `
+      <div style="padding: 4px 0 16px 0;">
+        ${planningSchedule.map((p,i) => `
+          <div style="display:flex; gap:12px; padding:9px 0; border-bottom:1px solid var(--line-soft); font-size:13px;">
+            <span style="color:var(--ink-muted); width:20px;">${i+1}</span>
+            <div style="flex:1;">
+              <div style="font-weight:600;">${p.name}</div>
+              <div style="font-size:11.5px; color:var(--ink-muted);">${p.focusPoint} — ${p.anchor}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ---------------- TEAM & CLIENT ACCESS ----------------
+  function teamView(){
+    const superAdmin = isSuperAdmin();
+    return `
+      <div class="tes-topbar">
+        <div>
+          <h1 class="tes-page-title">Team &amp; Client Access</h1>
+          <div class="tes-page-sub">Who can sign in, and what side of the platform they land on.</div>
+        </div>
+      </div>
+      <div class="tes-content">
+        ${!superAdmin ? `<div class="tes-banner">Only the super admin (theeventsmithng@gmail.com) can add team members or authorise client emails. You're signed in as ${state.currentUser.name}, so this page is read only.</div>` : ''}
+
+        <div class="tes-panel" style="margin-bottom:18px;">
+          <div class="tes-panel-title" style="display:flex; justify-content:space-between; align-items:center;">
+            Team
+            ${superAdmin ? `<button class="tes-btn small secondary" data-action="toggle-add-team">${state.showAddTeamForm ? 'Cancel' : '+ Add team member'}</button>` : ''}
+          </div>
+
+          ${superAdmin && state.showAddTeamForm ? `
+            <div style="padding:14px 0; border-bottom:1px solid var(--line-soft); margin-bottom:6px;">
+              <div class="tes-form-grid">
+                <div class="tes-form-row"><label class="tes-form-label">Full name</label><input class="tes-form-input" id="newTeamName" placeholder="e.g. Funke Adesanya"></div>
+                <div class="tes-form-row"><label class="tes-form-label">Email</label><input class="tes-form-input" id="newTeamEmail" placeholder="e.g. funke@theeventsmithng.com"></div>
+              </div>
+              <div class="tes-form-row" style="max-width:220px;">
+                <label class="tes-form-label">Tier</label>
+                <select class="tes-form-select" id="newTeamTier">
+                  <option value="SENIOR">Senior — full access, incl. financials</option>
+                  <option value="JUNIOR">Junior — no financial modules</option>
+                </select>
+              </div>
+              <button class="tes-btn small" data-action="submit-add-team">Add to team</button>
+              <div class="tes-protected-note" style="margin-top:8px;">They'll get access the same way you did: request a code at this email, enter it, land on /admin.</div>
+            </div>
+          ` : ''}
+
+          ${teamMembers.map(m => `
+            <div class="tes-list-row">
+              <div class="tes-list-main">
+                <div class="tes-list-title">${m.name}</div>
+                <div class="tes-list-sub">${m.email}${m.addedBy ? ' · added by ' + m.addedBy : ''}</div>
+              </div>
+              <span class="tes-tier-badge ${m.tier==='SUPER_ADMIN'?'super':(m.tier==='SENIOR'?'senior':'junior')}">${tierLabel(m.tier)}</span>
+              <span class="tes-tier-badge ${m.isActive ? '' : 'inactive'}" style="${m.isActive ? 'background:var(--positive-bg); color:var(--positive);' : ''}">${m.isActive ? 'Active' : 'Deactivated'}</span>
+              ${superAdmin && !m.isProtected ? `<button class="tes-btn small secondary" data-action="toggle-team-active" data-team-id="${m.id}">${m.isActive ? 'Deactivate' : 'Reactivate'}</button>` : (m.isProtected ? `<span class="tes-protected-note">Permanent — can't be changed</span>` : '')}
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="tes-panel">
+          <div class="tes-panel-title">Client access, by event</div>
+          <div class="tes-form-row" style="max-width:340px;">
+            <select class="tes-form-select" id="teamAccessEventSelect">
+              ${events.map(e => `<option value="${e.id}" ${state.teamAccessEvent===e.id?'selected':''}>${e.names}</option>`).join('')}
+            </select>
+          </div>
+          ${teamAccessPanel(superAdmin)}
+        </div>
+      </div>
+    `;
+  }
+
+  function teamAccessPanel(superAdmin){
+    const e = events.find(ev => ev.id === state.teamAccessEvent) || events[0];
+    return `
+      ${e.authorisedEmails.map(email => `
+        <div class="tes-email-row">
+          ${email}
+          ${superAdmin ? `<button class="tes-remove" data-action="revoke-client-email" data-event-id="${e.id}" data-email="${email}">Revoke</button>` : ''}
+        </div>
+      `).join('')}
+      ${superAdmin ? `
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <input class="tes-form-input" id="newClientEmail" placeholder="client@email.com" style="flex:1;">
+          <button class="tes-btn small" data-action="submit-add-client" data-event-id="${e.id}">Authorise</button>
+        </div>
+        <div class="tes-protected-note" style="margin-top:8px;">They'll receive an OTP code and land on ${e.names}'s client dashboard, and only that event's.</div>
+      ` : ''}
+    `;
+  }
+
+  // ---------------- VENDORS (global directory) ----------------
+  function vendorsView(){
+    const byCategory = {};
+    globalVendorDirectory.forEach(v => {
+      (byCategory[v.category] = byCategory[v.category] || []).push(v);
+    });
+    return `
+      <div class="tes-topbar">
+        <div>
+          <h1 class="tes-page-title">Vendors</h1>
+          <div class="tes-page-sub">Every vendor booked across any event, in one directory.</div>
+        </div>
+      </div>
+      <div class="tes-content">
+        ${Object.keys(byCategory).map(cat => `
+          <div class="tes-panel" style="margin-bottom:14px;">
+            <div class="tes-panel-title">${cat}</div>
+            ${byCategory[cat].map(v => `
+              <div class="tes-list-row">
+                <div class="tes-list-main">
+                  <div class="tes-list-title">${v.businessName}</div>
+                  <div class="tes-list-sub">${v.contactName} · ${v.phone}</div>
+                </div>
+                <div style="font-size:12px; color:var(--ink-muted); width:260px; text-align:right;">${v.eventNames}</div>
+                <span class="tes-status-tag ${v.status==='active' ? 'selected' : 'considering'}">${v.status==='active' ? 'Active' : 'Considering'}</span>
+              </div>
+            `).join('')}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ---------------- SETTINGS ----------------
+  function settingsView(){
+    return `
+      <div class="tes-topbar">
+        <div>
+          <h1 class="tes-page-title">Settings</h1>
+          <div class="tes-page-sub">Business details and how access is structured.</div>
+        </div>
+      </div>
+      <div class="tes-content">
+        <div class="tes-panel" style="margin-bottom:18px;">
+          <div class="tes-panel-title">Business</div>
+          <div class="tes-fact-grid">
+            <div><div class="tes-fact-label">Business name</div><div class="tes-fact-value">The EventSmith NG</div></div>
+            <div><div class="tes-fact-label">Primary contact</div><div class="tes-fact-value">theeventsmithng@gmail.com</div></div>
+            <div><div class="tes-fact-label">Location</div><div class="tes-fact-value">Lagos, Nigeria</div></div>
+          </div>
+        </div>
+
+        <div class="tes-panel" style="margin-bottom:18px;">
+          <div class="tes-panel-title">Planner tiers</div>
+          <div class="tes-list-row">
+            <span class="tes-tier-badge super">Super Admin</span>
+            <div class="tes-list-main" style="margin-left:10px;">Full access. The only tier that can add team members or authorise client emails. Exactly one account — permanent, can't be deactivated.</div>
+          </div>
+          <div class="tes-list-row">
+            <span class="tes-tier-badge senior">Senior</span>
+            <div class="tes-list-main" style="margin-left:10px;">Full access to an assigned event, including Budget, Vendor Payments, Planning Fees and the Funds Ledger.</div>
+          </div>
+          <div class="tes-list-row">
+            <span class="tes-tier-badge junior">Junior</span>
+            <div class="tes-list-main" style="margin-left:10px;">Everything except the financial modules — Budget, Vendor Payments, Planning Fees and the Funds Ledger stay hidden.</div>
+          </div>
+        </div>
+
+        <div class="tes-panel">
+          <div class="tes-panel-title">Sign-in</div>
+          <div class="tes-list-row">
+            <div class="tes-list-main">
+              <div class="tes-list-title">Passwordless, by email code</div>
+              <div class="tes-list-sub">Every sign-in is a 6-digit code emailed to you, valid for 10 minutes, single use. No passwords are stored anywhere.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------------- CREATE NEW EVENT (modal) ----------------
+  function createEventModal(){
+    const step = state.createEventType ? 2 : 1;
+    return `
+      <div class="tes-modal-overlay" data-action="close-modal">
+        <div class="tes-modal-card" onclick="event.stopPropagation()">
+          <div class="tes-modal-head">
+            <div>
+              <div class="tes-modal-title">Create New Event</div>
+              <div class="tes-page-sub" style="margin-top:2px;">${step===1 ? 'Step 1 of 2 — choose the event type' : 'Step 2 of 2 — the basics'}</div>
+            </div>
+            <button class="tes-modal-close" data-action="close-modal">✕</button>
+          </div>
+
+          ${step === 1 ? `
+            <div class="tes-type-grid">
+              ${eventTypesList.map(t => `
+                <div class="tes-type-card" data-pick-type="${t.name}">
+                  <div class="tes-type-name">${t.name}</div>
+                  <div class="tes-type-meta">${t.hasTemplate ? t.templateName : 'No template yet — starts blank'}</div>
+                </div>
+              `).join('')}
+            </div>
+          ` : `
+            <div class="tes-banner" style="margin-bottom:16px;">${state.createEventType}${eventTypesList.find(t=>t.name===state.createEventType).hasTemplate ? ' — ' + eventTypesList.find(t=>t.name===state.createEventType).templateName + ' will be cloned onto this event.' : ' — no template exists yet, this event starts with an empty schedule and budget.'}</div>
+            <div class="tes-form-row"><label class="tes-form-label">Event name(s)</label><input class="tes-form-input" id="newEventNames" placeholder="e.g. Amara &amp; Chidi"></div>
+            <div class="tes-form-grid">
+              <div class="tes-form-row"><label class="tes-form-label">Event date</label><input class="tes-form-input" id="newEventDate" placeholder="e.g. Mar 21, 2027"></div>
+              <div class="tes-form-row"><label class="tes-form-label">Expected guests</label><input class="tes-form-input" id="newEventGuests" placeholder="e.g. 400"></div>
+            </div>
+            <div class="tes-form-row"><label class="tes-form-label">Primary venue / location</label><input class="tes-form-input" id="newEventVenue" placeholder="e.g. The Civic Centre, Victoria Island"></div>
+            <div style="display:flex; gap:10px; margin-top:6px;">
+              <button class="tes-btn secondary" data-action="back-to-type-picker">← Back</button>
+              <button class="tes-btn" data-action="submit-create-event">Create event</button>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  function workspaceView(){
+    const e = events.find(ev => ev.id === state.activeEvent) || events[0];
+    const tabs = ['overview','planning schedule','checklist','budget','vendors','payments','itinerary','documents','notes','activity'];
+    return `
+      <div class="tes-topbar" style="display:block;">
+        <div class="tes-breadcrumb"><span data-nav="dashboard">Dashboard</span> / Events / ${e.names}</div>
+        <div class="tes-workspace-header">
+          <div class="tes-workspace-title-row">
+            <h1 class="tes-page-title">${e.names}</h1>
+            <span class="tes-countdown">${e.daysToEvent >= 0 ? e.daysToEvent + ' days to go' : 'Completed'}</span>
+          </div>
+          <button class="tes-btn secondary small" data-action="edit-overview">Edit details</button>
+        </div>
+        <div class="tes-page-sub">${e.type} · ${e.date} · ${e.venuePrimary}</div>
+      </div>
+      <div class="tes-content" style="padding-top:0;">
+        <div class="tes-tabbar">
+          ${tabs.map(t => `<button class="tes-tab ${state.eventTab===t?'active':''}" data-eventtab="${t}">${t.charAt(0).toUpperCase()+t.slice(1)}</button>`).join('')}
+        </div>
+        ${state.eventTab === 'overview' ? overviewTab(e) : (state.eventTab === 'budget' ? budgetTab(e) : (state.eventTab === 'planning schedule' ? scheduleTab(e) : (state.eventTab === 'checklist' ? checklistTab(e) : (state.eventTab === 'vendors' ? vendorsTab(e) : (state.eventTab === 'payments' ? paymentsTab(e) : (state.eventTab === 'itinerary' ? itineraryTab(e) : (state.eventTab === 'documents' ? documentsTab(e) : (state.eventTab === 'notes' ? notesTab(e) : (state.eventTab === 'activity' ? activityTab(e) : placeholderTab(state.eventTab))))))))))}
+      </div>
+    `;
+  }
+
+  function overviewTab(e){
+    return `
+      <div class="tes-overview-grid">
+        <div class="tes-panel">
+          <div class="tes-panel-title">Client brief</div>
+          <div class="tes-fact-grid">
+            <div><div class="tes-fact-label">Client names</div><div class="tes-fact-value">${e.names}</div></div>
+            <div><div class="tes-fact-label">Event type</div><div class="tes-fact-value">${e.type}</div></div>
+            <div><div class="tes-fact-label">Event date(s)</div><div class="tes-fact-value">${e.date}</div></div>
+            <div><div class="tes-fact-label">Location</div><div class="tes-fact-value">${e.location}</div></div>
+            <div><div class="tes-fact-label">Primary venue</div><div class="tes-fact-value">${e.venuePrimary}</div></div>
+            <div><div class="tes-fact-label">Expected guests</div><div class="tes-fact-value">${e.guests}</div></div>
+            <div><div class="tes-fact-label">Colours</div><div class="tes-fact-value">${e.colours}</div></div>
+            <div><div class="tes-fact-label">Hashtag</div><div class="tes-fact-value">${e.hashtag}</div></div>
+            <div><div class="tes-fact-label">Planning start</div><div class="tes-fact-value">${e.planningStart}</div></div>
+            <div><div class="tes-fact-label">Planning stage</div><div class="tes-fact-value">${e.stage}</div></div>
+            <div><div class="tes-fact-label">Contact</div><div class="tes-fact-value">${e.contact}</div></div>
+          </div>
+
+          <div class="tes-panel-title" style="margin-top:22px;">Event components</div>
+          <div class="tes-component-tabs">
+            <span class="tes-component-tab active">Wedding Reception</span>
+            <span class="tes-component-tab">Traditional Engagement</span>
+            <button class="tes-btn secondary small">+ Add component</button>
+          </div>
+
+          <div class="tes-panel-title" style="margin-top:22px;">Notes</div>
+          <div style="font-size:13px; color:var(--ink-soft);">Bride prefers sage over emerald for the aesthetics. Confirm with decor vendor before final mockup.</div>
+        </div>
+
+        <div class="tes-panel">
+          <div class="tes-panel-title">Authorised client emails</div>
+          ${e.authorisedEmails.map(em => `
+            <div class="tes-email-row">${em}<button class="tes-remove">Remove</button></div>
+          `).join('')}
+          <button class="tes-btn secondary small" style="margin-top:12px; width:100%; justify-content:center;">+ Add authorised email</button>
+
+          <div class="tes-panel-title" style="margin-top:22px;">Planning fee status</div>
+          <div class="tes-fact-value" style="font-size:19px; font-family:'Cormorant',serif; font-style:italic; color:var(--brand);">${fmt(e.planningFeeOutstanding)} <span style="font-size:12px; color:var(--ink-muted); font-family:'Cormorant Garamond',serif;">outstanding</span></div>
+
+          <div class="tes-panel-title" style="margin-top:22px;">Current moodboard</div>
+          <div style="border:1px dashed var(--line); border-radius:8px; padding:16px; font-size:12.5px; color:var(--ink-muted); text-align:center;">Moodboard_v2.pdf<br><span class="tes-status-tag selected" style="margin-top:6px; display:inline-block;">Approved</span></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function budgetTab(e){
+    const componentNames = Object.keys(budget);
+    const comp = budget[state.component];
+    const grand = comp.categories.reduce((s,c)=> s + c.total, 0);
+    const consolidated = componentNames.reduce((s,cn)=> s + budget[cn].categories.reduce((s2,c)=>s2+c.total,0), 0);
+
+    return `
+      <div class="tes-component-tabs">
+        ${componentNames.map(cn => `<span class="tes-component-tab ${state.component===cn?'active':''}" data-component="${cn}">${cn}</span>`).join('')}
+      </div>
+
+      <div class="tes-budget-summary">
+        <div class="tes-kpi"><div class="tes-kpi-label">${state.component} total</div><div class="tes-kpi-value">${fmt(grand)}</div></div>
+        <div class="tes-kpi"><div class="tes-kpi-label">Consolidated event total</div><div class="tes-kpi-value">${fmt(consolidated)}</div></div>
+        <div class="tes-kpi"><div class="tes-kpi-label">Outstanding balance (this component)</div><div class="tes-kpi-value warn">${fmt(comp.categories.reduce((s,c)=>s + c.items.reduce((s2,i)=>s2+(i.balance||0),0),0))}</div></div>
+      </div>
+
+      ${comp.categories.map((cat, ci) => categoryBlock(cat, ci)).join('')}
+
+      <div class="tes-grandtotal-bar">
+        <span class="tes-gt-label">${state.component}: Grand Total</span>
+        <span class="tes-gt-value">${fmt(grand)}</span>
+      </div>
+    `;
+  }
+
+  function categoryBlock(cat, ci){
+    return `
+      <div class="tes-category">
+        <div class="tes-category-head" data-cat="${ci}">
+          <div class="tes-category-head-left">
+            <span class="tes-caret">▸</span>
+            <span class="tes-category-name">${cat.name}</span>
+          </div>
+          <span class="tes-category-total">${fmt(cat.total)}</span>
+        </div>
+        <div class="tes-category-body" id="cat-body-${ci}">
+          ${cat.items.map((item, ii) => lineItem(item, ci, ii)).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function lineItem(item, ci, ii){
+    const key = `${ci}-${ii}`;
+    let badge = '';
+    if(item.mode === 'competing') badge = `<span class="tes-mode-badge competing" data-detail="${key}">${item.options.length} options</span>`;
+    if(item.mode === 'split') badge = `<span class="tes-mode-badge split" data-detail="${key}">${item.allocations.length} vendors</span>`;
+
+    let detail = '';
+    if(item.mode === 'competing'){
+      detail = `
+        <div class="tes-lineitem-detail" id="detail-${key}">
+          ${item.options.map((o,oi) => `
+            <div class="tes-vendor-option-row">
+              <span class="tes-vo-name">${o.vendor}</span>
+              <span class="tes-vo-includes">${o.includes}</span>
+              <span class="tes-vo-amount">${fmt(o.amount)}</span>
+              <span class="tes-status-tag ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span>
+              ${o.status !== 'selected' ? `<button class="tes-select-btn" data-select="${key}:${oi}">Select</button>` : `<span style="width:76px;"></span>`}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    } else if(item.mode === 'split'){
+      const sum = item.allocations.reduce((s,a)=>s+a.amount,0);
+      detail = `
+        <div class="tes-lineitem-detail" id="detail-${key}">
+          ${item.allocations.map(a => `
+            <div class="tes-vendor-alloc-row">
+              <span class="tes-vo-name">${a.vendor}</span>
+              <span class="tes-alloc-portion">${a.portion}</span>
+              <span class="tes-vo-amount">${fmt(a.amount)}</span>
+            </div>
+          `).join('')}
+          <div class="tes-alloc-sum"><span>Sum of allocations</span><span>${fmt(sum)} of ${fmt(item.amount)} committed</span></div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="tes-lineitem">
+        <div class="tes-lineitem-row">
+          <span class="tes-lineitem-name">${item.name}</span>
+          ${badge}
+          <span class="tes-lineitem-amount">${fmt(item.amount)}</span>
+          <span class="tes-lineitem-balance">${item.balance > 0 ? fmt(item.balance) + ' due' : 'Fully paid'}</span>
+        </div>
+        ${detail}
+      </div>
+    `;
+  }
+
+  // ---------------- PLANNING SCHEDULE TAB ----------------
+  function scheduleTab(e){
+    const overallProgress = Math.round(planningSchedule.reduce((s,p)=>s+p.progress,0) / planningSchedule.length);
+    return `
+      <div class="tes-panel" style="margin-bottom:18px;">
+        <div class="tes-panel-title">Overall planning progress</div>
+        <div class="tes-progress-track"><div class="tes-progress-fill" style="width:${overallProgress}%"></div></div>
+        <div class="tes-progress-label"><span>Weighted by planning phase, earlier phases count for more</span><span>${overallProgress}%</span></div>
+      </div>
+      ${planningSchedule.map((phase, pi) => `
+        <div class="tes-phase">
+          <div class="tes-phase-head" data-phase="${pi}">
+            <div class="tes-phase-head-top">
+              <span class="tes-phase-name"><span class="tes-phase-num">${pi+1}</span>${phase.name}</span>
+              <span class="tes-phase-anchor">${phase.anchor}</span>
+            </div>
+            <div class="tes-phase-focus">${phase.focusPoint}</div>
+            <div class="tes-phase-progress-track"><div class="tes-phase-progress-fill" style="width:${phase.progress}%"></div></div>
+          </div>
+          <div class="tes-phase-body" id="phase-body-${pi}">
+            ${phase.explanation ? `<div class="tes-phase-explanation">${phase.explanation}</div>` : ''}
+            ${phase.tasks.map(t => `
+              <div class="tes-phase-task">
+                <span class="tes-dot ${t.priority}"></span>
+                <span class="tes-task-checkbox ${t.status}">${t.status==='done' ? '✓' : ''}</span>
+                <span class="tes-task-label ${t.status==='done' ? 'done' : ''}">${t.label}</span>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  // ---------------- CHECKLIST TAB ----------------
+  function checklistTab(e){
+    const allTasks = [];
+    planningSchedule.forEach((phase) => phase.tasks.forEach(t => allTasks.push({ ...t, phase: phase.name })));
+    const done = allTasks.filter(t => t.status === 'done').length;
+    return `
+      <div class="tes-panel" style="margin-bottom:18px;">
+        <div class="tes-panel-title">Checklist progress</div>
+        <div class="tes-progress-track"><div class="tes-progress-fill" style="width:${Math.round(done/allTasks.length*100)}%"></div></div>
+        <div class="tes-progress-label"><span>${done} of ${allTasks.length} tasks completed</span><span>${Math.round(done/allTasks.length*100)}% (simple count, phase weighted view lives on Planning Schedule)</span></div>
+      </div>
+      <div class="tes-panel">
+        ${allTasks.map(t => `
+          <div class="tes-task-row" style="padding:10px 0;">
+            <span class="tes-dot ${t.priority}"></span>
+            <span class="tes-task-checkbox ${t.status}" style="margin-right:2px;">${t.status==='done' ? '✓' : ''}</span>
+            <span class="${t.status==='done' ? 'tes-task-label done' : ''}" style="flex:1;">${t.label}</span>
+            <span class="tes-task-meta">${t.phase}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ---------------- VENDORS TAB ----------------
+  function vendorsTab(e){
+    const grouped = {};
+    vendorDirectory.forEach(v => { grouped[v.category] = grouped[v.category] || []; grouped[v.category].push(v); });
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div class="tes-page-sub">${vendorDirectory.length} vendors across ${Object.keys(grouped).length} categories</div>
+        <div style="display:flex; gap:8px;">
+          <button class="tes-btn secondary small">Other / Custom Category</button>
+          <button class="tes-btn small">+ Add Vendor</button>
+        </div>
+      </div>
+      ${Object.entries(grouped).map(([cat, vendors]) => `
+        <div class="tes-panel-title" style="margin-top:18px;">${cat}</div>
+        ${vendors.map((v, vi) => vendorCard(v, cat + '-' + vi)).join('')}
+      `).join('')}
+    `;
+  }
+
+  function vendorCard(v, key){
+    return `
+      <div class="tes-vendor-card">
+        <div class="tes-vendor-top">
+          <div>
+            <div class="tes-vendor-name">${v.businessName}</div>
+            <div class="tes-vendor-cat">${v.category}</div>
+          </div>
+          <span class="tes-stage-pill">${v.status.charAt(0).toUpperCase()+v.status.slice(1)}</span>
+        </div>
+        <div class="tes-vendor-linked">Linked to budget line: <b>${v.linkedItem}</b></div>
+        <div class="tes-vendor-contacts">
+          ${v.contacts.filter(c => c.current).map(c => `
+            <div class="tes-contact-row">
+              <span class="tes-contact-current-tag">Current</span>
+              <b>${c.name}</b>, ${c.role} · ${c.phone}
+            </div>
+          `).join('')}
+          ${v.contacts.some(c => !c.current) ? `
+            <span class="tes-contact-toggle" data-contact-toggle="${key}">View contact history (${v.contacts.filter(c=>!c.current).length})</span>
+            <div class="tes-contact-history" id="contact-history-${key}">
+              ${v.contacts.filter(c => !c.current).map(c => `
+                <div class="tes-contact-row former">
+                  <span class="tes-contact-former-tag">Former</span>
+                  ${c.name}, ${c.role} · ${c.phone}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------------- PAYMENTS TAB ----------------
+  function paymentsTab(e){
+    const subtabs = [ ['vendor','Vendor Payments'], ['fees','Planning Fees'], ['funds','Event Funds Ledger'] ];
+    return `
+      <div class="tes-subtabbar">
+        ${subtabs.map(([key,label]) => `<button class="tes-subtab ${state.paymentsSubtab===key?'active':''}" data-paysubtab="${key}">${label}</button>`).join('')}
+      </div>
+      ${state.paymentsSubtab === 'funds' ? fundsLedgerView(e) : (state.paymentsSubtab === 'fees' ? feesView(e) : vendorPaymentsView(e))}
+    `;
+  }
+
+  function fundsLedgerView(e){
+    const unallocated = fundsTotalReceived - fundsTotalAllocated;
+    const held = fundsTotalAllocated - fundsTotalDisbursed;
+    return `
+      <div class="tes-kpi-row" style="grid-template-columns: repeat(4,1fr);">
+        <div class="tes-kpi"><div class="tes-kpi-label">Total received</div><div class="tes-kpi-value">${fmt(fundsTotalReceived)}</div></div>
+        <div class="tes-kpi"><div class="tes-kpi-label">Total allocated</div><div class="tes-kpi-value">${fmt(fundsTotalAllocated)}</div></div>
+        <div class="tes-kpi"><div class="tes-kpi-label">Disbursed to vendors</div><div class="tes-kpi-value">${fmt(fundsTotalDisbursed)}</div></div>
+        <div class="tes-kpi"><div class="tes-kpi-label">Held on client's behalf</div><div class="tes-kpi-value warn">${fmt(held)}</div></div>
+      </div>
+      <div class="tes-page-sub" style="margin-bottom:12px;">Money Received → Allocation → Vendor Payment. Click an entry to see how it was split.</div>
+      ${fundsLedger.map((f, fi) => `
+        <div class="tes-fund-card">
+          <div class="tes-fund-head" data-fund="${fi}">
+            <div>
+              <div class="tes-fund-payer">${f.payer}</div>
+              <div class="tes-fund-date">${f.date} · Ref: ${f.reference}</div>
+            </div>
+            <div class="tes-fund-amount">${fmt(f.amount)}</div>
+          </div>
+          <div class="tes-fund-body" id="fund-body-${fi}">
+            ${f.allocations.map(a => `
+              <div class="tes-fund-alloc-row"><span>${a.purpose}</span><span>${fmt(a.amount)}</span></div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  function feesView(e){
+    return `
+      <div class="tes-kpi-row" style="grid-template-columns: repeat(3,1fr);">
+        <div class="tes-kpi"><div class="tes-kpi-label">Total planning investment</div><div class="tes-kpi-value">${fmt(1200000)}</div></div>
+        <div class="tes-kpi"><div class="tes-kpi-label">Total fees received</div><div class="tes-kpi-value">${fmt(1200000 - e.planningFeeOutstanding)}</div></div>
+        <div class="tes-kpi"><div class="tes-kpi-label">Outstanding balance</div><div class="tes-kpi-value warn">${fmt(e.planningFeeOutstanding)}</div></div>
+      </div>
+      <div class="tes-panel">
+        <div class="tes-panel-title">Instalments</div>
+        <div class="tes-task-row"><span class="tes-dot high"></span>Deposit<span class="tes-task-meta">${fmt(600000)} · Paid May 20, 2026</span></div>
+        <div class="tes-task-row"><span class="tes-dot med"></span>Instalment 2<span class="tes-task-meta">${fmt(250000)} · Paid Jul 15, 2026</span></div>
+        <div class="tes-task-row"><span class="tes-dot low"></span>Final instalment<span class="tes-task-meta">${fmt(e.planningFeeOutstanding)} · Due Feb 1, 2027</span></div>
+      </div>
+      <div class="tes-page-sub" style="margin-top:14px;">This is kept entirely separate from the Event Funds Ledger. Planning fees never mix with vendor money.</div>
+    `;
+  }
+
+  function vendorPaymentsView(e){
+    const rows = [
+      { vendor: 'Ladysan Events', total: 9200000, paid: 2000000, status: 'Part Paid' },
+      { vendor: 'SaxTee (Live Band)', total: 1800000, paid: 600000, status: 'Part Paid' },
+      { vendor: 'DJ E-touch', total: 1500000, paid: 1000000, status: 'Part Paid' },
+      { vendor: 'Kairee Catering', total: 3300000, paid: 0, status: 'Not Started' },
+    ];
+    return `
+      <div class="tes-panel">
+        ${rows.map(r => `
+          <div class="tes-task-row" style="padding:11px 0;">
+            <b style="flex:1;">${r.vendor}</b>
+            <span class="tes-task-meta" style="width:130px; text-align:right;">${fmt(r.paid)} of ${fmt(r.total)}</span>
+            <span class="tes-stage-pill ${r.status==='Not Started' ? 'warn' : ''}" style="margin-left:12px;">${r.status}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ---------------- ITINERARY TAB ----------------
+  function parseTimeToMinutes(t){
+    const m = t.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)?$/i);
+    if(!m) return null;
+    let h = parseInt(m[1],10); const min = parseInt(m[2],10); const ampm = (m[3]||'').toUpperCase();
+    if(ampm === 'PM' && h !== 12) h += 12;
+    if(ampm === 'AM' && h === 12) h = 0;
+    return h*60 + min;
+  }
+
+  function itineraryTab(e){
+    const times = itinerary.map(it => parseTimeToMinutes(it.time));
+    let hasOutOfOrder = false;
+    for(let i=1;i<times.length;i++){
+      if(times[i]!==null && times[i-1]!==null && times[i] < times[i-1]) hasOutOfOrder = true;
+    }
+    return `
+      <div class="tes-itin-toolbar">
+        <button class="tes-btn secondary small" data-action="export-full">Export Full Run of Show</button>
+        <button class="tes-btn secondary small" data-action="export-coordinator">Export by Coordinator</button>
+        <button class="tes-btn secondary small" data-action="export-vendor">Export by Vendor</button>
+      </div>
+      <div class="tes-page-sub" style="margin-bottom:4px;">Drag rows to reorder the run of show. Click a time to edit it.</div>
+      ${hasOutOfOrder ? `<div class="tes-itin-warning">Some times are out of sequence after reordering, review before exporting</div>` : ''}
+      <div id="itineraryList" style="margin-top:10px;">
+        ${itinerary.map((it, i) => itineraryRow(it, i, times)).join('')}
+      </div>
+    `;
+  }
+
+  function itineraryRow(it, i, times){
+    const outOfOrder = i>0 && times[i]!==null && times[i-1]!==null && times[i] < times[i-1];
+    return `
+      <div class="tes-itin-row ${outOfOrder ? 'out-of-order' : ''}" draggable="true" data-itin-index="${i}">
+        <span class="tes-itin-drag">⠿</span>
+        <input class="tes-itin-time-input" data-time-index="${i}" value="${it.time}" />
+        <div class="tes-itin-body">
+          <div class="tes-itin-activity">${it.activity}</div>
+          <div class="tes-itin-location">${it.location}</div>
+          <div class="tes-itin-tags">
+            ${it.vendors.map(v => `<span class="tes-itin-tag">${v}</span>`).join('')}
+            <span class="tes-itin-tag coordinator">${it.coordinator}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------------- DOCUMENTS TAB ----------------
+  function documentsTab(e){
+    return Object.entries(documents).map(([folder, docs]) => `
+      <div class="tes-doc-group-title">${folder}</div>
+      ${docs.map((d, di) => documentRow(d, folder + '-' + di)).join('')}
+    `).join('');
+  }
+
+  function documentRow(d, key){
+    const current = d.versions[d.versions.length - 1];
+    return `
+      <div>
+        <div class="tes-doc-row">
+          <span class="tes-doc-name">${d.name}</span>
+          <span class="tes-doc-version">${current.label}${current.approved ? ' · Approved' : ''}</span>
+          ${d.versions.length > 1 ? `<span class="tes-doc-versions-toggle" data-doc-toggle="${key}">Version history (${d.versions.length})</span>` : ''}
+          <span class="tes-visible-toggle" data-doc-visible="${key}">
+            <span class="tes-switch ${d.visible ? 'on' : ''}"><span class="tes-switch-knob"></span></span>
+            Visible to client
+          </span>
+        </div>
+        <div class="tes-doc-history" id="doc-history-${key}">
+          ${d.versions.slice().reverse().map(v => `
+            <div class="tes-doc-history-row"><span>${v.label}: ${v.note || 'No note'}</span><span>${v.date}${v.approved ? ' · Approved' : ''}</span></div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // ---------------- NOTES TAB ----------------
+  function notesTab(e){
+    return `
+      <div class="tes-notes-toolbar">
+        <div class="tes-page-sub">${notesData.length} notes · searchable, date-stamped</div>
+        <button class="tes-btn small" data-action="add-note">+ Add note</button>
+      </div>
+      ${notesData.map(n => `
+        <div class="tes-note-card">
+          <div class="tes-note-top">
+            <span class="tes-note-category">${n.category}</span>
+            <span class="tes-note-meta">${n.author} · ${n.date}</span>
+          </div>
+          <div class="tes-note-content">${n.content}</div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  // ---------------- ACTIVITY TAB ----------------
+  function activityTab(e){
+    return `
+      <div class="tes-panel">
+        ${activityData.map(a => `
+          <div class="tes-activity-row">
+            <span class="tes-activity-icon">${a.icon}</span>
+            <div>
+              <div class="tes-activity-text">${a.text}</div>
+              <div class="tes-activity-time">${a.time}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  function placeholderTab(tabName){
+    return `
+      <div class="tes-placeholder">
+        <div class="tes-placeholder-mark"><img src="${LOGO}" alt=""></div>
+        <span class="serif">${tabName.charAt(0).toUpperCase()+tabName.slice(1)}</span>
+        This module follows the same pattern as Overview and Budget, built next in the Phase 1 sequence.
+      </div>
+    `;
+  }
+
+  // ---------------- HANDLERS ----------------
+  function attachHandlers(){
+    document.querySelectorAll('[data-nav]').forEach(el => el.addEventListener('click', () => {
+      state.view = el.getAttribute('data-nav'); render();
+    }));
+    document.querySelectorAll('[data-filter]').forEach(el => el.addEventListener('click', () => {
+      state.filter = el.getAttribute('data-filter'); render();
+    }));
+    document.querySelectorAll('[data-open-event]').forEach(el => el.addEventListener('click', () => {
+      state.activeEvent = el.getAttribute('data-open-event');
+      state.view = 'workspace'; state.eventTab = 'overview'; state.component = 'Wedding Reception';
+      render();
+    }));
+    document.querySelectorAll('[data-eventtab]').forEach(el => el.addEventListener('click', () => {
+      state.eventTab = el.getAttribute('data-eventtab'); render();
+    }));
+    document.querySelectorAll('[data-component]').forEach(el => el.addEventListener('click', () => {
+      state.component = el.getAttribute('data-component'); render();
+    }));
+    document.querySelectorAll('[data-cat]').forEach(el => el.addEventListener('click', () => {
+      const id = 'cat-body-' + el.getAttribute('data-cat');
+      const body = document.getElementById(id);
+      const caret = el.querySelector('.tes-caret');
+      body.classList.toggle('open');
+      caret.classList.toggle('open');
+    }));
+    document.querySelectorAll('[data-detail]').forEach(el => el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const id = 'detail-' + el.getAttribute('data-detail');
+      document.getElementById(id).classList.toggle('open');
+    }));
+    document.querySelectorAll('[data-action="create-event"]').forEach(el => el.addEventListener('click', () => {
+      state.modal = 'createEvent'; state.createEventType = null; render();
+    }));
+    document.querySelectorAll('[data-action="close-modal"]').forEach(el => el.addEventListener('click', () => {
+      state.modal = null; state.createEventType = null; render();
+    }));
+    document.querySelectorAll('[data-pick-type]').forEach(el => el.addEventListener('click', () => {
+      state.createEventType = el.getAttribute('data-pick-type'); render();
+    }));
+    document.querySelectorAll('[data-action="back-to-type-picker"]').forEach(el => el.addEventListener('click', () => {
+      state.createEventType = null; render();
+    }));
+    document.querySelectorAll('[data-action="submit-create-event"]').forEach(el => el.addEventListener('click', () => {
+      const names = document.getElementById('newEventNames').value.trim();
+      if(!names){ toast('Give the event a name first.'); return; }
+      const date = document.getElementById('newEventDate').value.trim() || 'Date to be confirmed';
+      const guests = document.getElementById('newEventGuests').value.trim() || '—';
+      const venue = document.getElementById('newEventVenue').value.trim() || 'Venue to be confirmed';
+      const newEvent = {
+        id: 'e' + (events.length + 1), names, type: state.createEventType, date,
+        stage: 'Upcoming', progress: 0, guests, hashtag: 'None',
+        planningFeeOutstanding: 0, fundsReceived: 0, vendorDueSoon: 0, daysToEvent: 365,
+        colours: 'To be confirmed', authorisedEmails: [], contact: '—', location: 'Lagos',
+        venuePrimary: venue, planningStart: 'Today',
+      };
+      events.push(newEvent);
+      state.modal = null; state.createEventType = null;
+      state.activeEvent = newEvent.id; state.view = 'workspace'; state.eventTab = 'overview';
+      render();
+      toast('Event created. Phases and budget categories clone from the template the moment this is wired to the real backend.');
+    }));
+    document.querySelectorAll('[data-eventsfilter]').forEach(el => el.addEventListener('click', () => {
+      state.eventsFilter = el.getAttribute('data-eventsfilter'); render();
+    }));
+    document.querySelectorAll('[data-template-toggle]').forEach(el => el.addEventListener('click', () => {
+      const name = el.getAttribute('data-template-toggle');
+      state.openTemplate = state.openTemplate === name ? null : name;
+      render();
+    }));
+    document.querySelectorAll('[data-action="toggle-add-team"]').forEach(el => el.addEventListener('click', () => {
+      state.showAddTeamForm = !state.showAddTeamForm; render();
+    }));
+    document.querySelectorAll('[data-action="submit-add-team"]').forEach(el => el.addEventListener('click', async () => {
+      const name = document.getElementById('newTeamName').value.trim();
+      const email = document.getElementById('newTeamEmail').value.trim().toLowerCase();
+      const tier = document.getElementById('newTeamTier').value;
+      if(!name || !email){ toast('Name and email are both required.'); return; }
+      if(teamMembers.some(m => m.email.toLowerCase() === email)){ toast('That email is already on the team.'); return; }
+
+      if(state.live){
+        const result = await tesApi.addTeam({ email, name, tier });
+        if(!result.ok){ toast(result.error || 'Could not add team member.'); return; }
+        teamMembers.push({ id: result.data.id, name: result.data.name, email: result.data.email, tier: result.data.tier, isActive: result.data.isActive, isProtected: false, addedBy: state.currentUser.name });
+      } else {
+        teamMembers.push({ id: 'a' + (teamMembers.length + 1), name, email, tier, isActive: true, isProtected: false, addedBy: state.currentUser.name });
+      }
+      state.showAddTeamForm = false; render();
+      toast(name + ' added. They sign in the same way — request a code at ' + email + '.');
+    }));
+    document.querySelectorAll('[data-action="toggle-team-active"]').forEach(el => el.addEventListener('click', async () => {
+      const id = el.getAttribute('data-team-id');
+      const m = teamMembers.find(x => x.id === id);
+      if(!m) return;
+      const nextActive = !m.isActive;
+
+      if(state.live){
+        const result = await tesApi.patchTeam({ adminUserId: m.id, isActive: nextActive });
+        if(!result.ok){ toast(result.error || 'Could not update that team member.'); return; }
+      }
+      m.isActive = nextActive; render();
+      toast(m.name + (m.isActive ? ' reactivated.' : ' deactivated.'));
+    }));
+    document.querySelectorAll('#teamAccessEventSelect').forEach(el => el.addEventListener('change', () => {
+      state.teamAccessEvent = el.value; render();
+    }));
+    document.querySelectorAll('[data-action="revoke-client-email"]').forEach(el => el.addEventListener('click', async () => {
+      const eventId = el.getAttribute('data-event-id');
+      const email = el.getAttribute('data-email');
+      const e = events.find(ev => ev.id === eventId);
+      if(!e) return;
+
+      if(state.live){
+        // Real rows don't carry their AuthorisedClientEmail id on the
+        // mapped event object (only the email string), so re-fetch this
+        // event's authorised list to find the id to delete.
+        const listRes = await tesApi.listClientEmails(eventId);
+        const row = listRes.ok && Array.isArray(listRes.data) ? listRes.data.find(r => r.email === email) : null;
+        if(!row){ toast('Could not find that authorisation to revoke.'); return; }
+        const result = await tesApi.revokeClientEmail(row.id);
+        if(!result.ok){ toast(result.error || 'Could not revoke access.'); return; }
+      }
+      e.authorisedEmails = e.authorisedEmails.filter(em => em !== email);
+      render();
+      toast('Access revoked for ' + email + '.');
+    }));
+    document.querySelectorAll('[data-action="submit-add-client"]').forEach(el => el.addEventListener('click', async () => {
+      const eventId = el.getAttribute('data-event-id');
+      const input = document.getElementById('newClientEmail');
+      const email = input.value.trim().toLowerCase();
+      if(!email){ toast('Enter an email to authorise.'); return; }
+      const e = events.find(ev => ev.id === eventId);
+      if(!e) return;
+      if(e.authorisedEmails.includes(email)){ toast('Already authorised on this event.'); return; }
+
+      if(state.live){
+        const result = await tesApi.addClientEmail(email, eventId);
+        if(!result.ok){ toast(result.error || 'Could not authorise that email.'); return; }
+      }
+      e.authorisedEmails.push(email);
+      state.teamAccessEvent = eventId;
+      render();
+      toast(email + ' authorised. They’ll get an OTP code and land on ' + e.names + '’s dashboard.');
+    }));
+    document.querySelectorAll('[data-action="edit-overview"]').forEach(el => el.addEventListener('click', () => {
+      toast('Inline editing on Overview fields, straightforward to wire up once this is a real form.');
+    }));
+    document.querySelectorAll('[data-select]').forEach(el => el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      const [key, oi] = el.getAttribute('data-select').split(':');
+      const [ci, ii] = key.split('-').map(Number);
+      const item = budget[state.component].categories[ci].items[ii];
+      item.options.forEach((o,idx) => { o.status = (idx === Number(oi)) ? 'selected' : 'rejected'; });
+      item.amount = item.options[Number(oi)].amount;
+      budget[state.component].categories[ci].total = budget[state.component].categories[ci].items.reduce((s,it)=>s+it.amount,0);
+      toast('Vendor selected. This line item\u2019s committed amount and totals now update.');
+      render();
+    }));
+    document.querySelectorAll('[data-action="send-code"]').forEach(el => el.addEventListener('click', async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      if(!email){ toast('Enter an email to continue.'); return; }
+      state.loginEmail = email;
+      state.loginStep = 'code';
+      render();
+      // Real backend, when there is one, never confirms or denies whether
+      // an email is authorised (see request-code/route.ts) — the response
+      // is identical either way, so there's nothing to branch on here.
+      const result = await tesApi.requestCode(email);
+      toast(result.error === 'offline'
+        ? 'Code sent to ' + email + ' (demo, any 6 digits work).'
+        : 'If that email is authorised, a code has been sent.');
+    }));
+    document.querySelectorAll('[data-action="verify-code"]').forEach(el => el.addEventListener('click', async () => {
+      const email = (state.loginEmail || '').trim();
+      const code = document.getElementById('loginCode').value.trim();
+      const result = await tesApi.verifyCode(email, code);
+
+      if(result.ok){
+        // Real sign-in succeeded — resolve who we are from the real team
+        // list rather than guessing, then pull in real events/team data.
+        state.live = true;
+        await syncWithBackend();
+        const typed = email.toLowerCase();
+        const matched = teamMembers.find(m => m.email.toLowerCase() === typed);
+        state.currentUser = matched || { name: email, email, tier: 'SENIOR', isActive: true, isProtected: false };
+        state.view = 'dashboard';
+        state.loginStep = 'email';
+        render();
+        return;
+      }
+
+      if(result.error !== 'offline'){
+        // There IS a live backend, and it rejected this code — don't fall
+        // through to demo sign-in, that would defeat the point of a real
+        // OTP check.
+        toast(result.error === 'incorrect_or_expired' ? 'That code is incorrect or has expired.' : (result.error || 'Could not verify that code.'));
+        return;
+      }
+
+      // No backend reachable at all (expected while this is still a
+      // standalone file) — fall back to demo sign-in so the prototype
+      // stays usable for a walkthrough.
+      const typed = (state.loginEmail || '').trim().toLowerCase();
+      const matched = teamMembers.find(m => m.email.toLowerCase() === typed);
+      state.currentUser = matched || { name: 'Guest Planner', email: typed || 'planner@theeventsmithng.com', tier: 'SENIOR', isActive: true, isProtected: false };
+      state.view = 'dashboard';
+      state.loginStep = 'email';
+      render();
+    }));
+    document.querySelectorAll('[data-action="resend-code"]').forEach(el => el.addEventListener('click', () => {
+      toast('A new code has been sent.');
+    }));
+    document.querySelectorAll('[data-action="login-back"]').forEach(el => el.addEventListener('click', () => {
+      state.loginStep = 'email'; render();
+    }));
+    document.querySelectorAll('[data-action="preview-client"]').forEach(el => el.addEventListener('click', () => {
+      state.activeEvent = state.activeEvent || events[0].id;
+      state.view = 'client'; render();
+    }));
+    document.querySelectorAll('[data-action="back-to-admin"]').forEach(el => el.addEventListener('click', () => {
+      state.view = 'dashboard'; render();
+    }));
+    document.querySelectorAll('[data-phase]').forEach(el => el.addEventListener('click', () => {
+      document.getElementById('phase-body-' + el.getAttribute('data-phase')).classList.toggle('open');
+    }));
+    document.querySelectorAll('[data-contact-toggle]').forEach(el => el.addEventListener('click', () => {
+      document.getElementById('contact-history-' + el.getAttribute('data-contact-toggle')).classList.toggle('open');
+    }));
+    document.querySelectorAll('[data-fund]').forEach(el => el.addEventListener('click', () => {
+      document.getElementById('fund-body-' + el.getAttribute('data-fund')).classList.toggle('open');
+    }));
+    document.querySelectorAll('[data-paysubtab]').forEach(el => el.addEventListener('click', () => {
+      state.paymentsSubtab = el.getAttribute('data-paysubtab'); render();
+    }));
+    document.querySelectorAll('[data-doc-toggle]').forEach(el => el.addEventListener('click', () => {
+      document.getElementById('doc-history-' + el.getAttribute('data-doc-toggle')).classList.toggle('open');
+    }));
+    document.querySelectorAll('[data-doc-visible]').forEach(el => el.addEventListener('click', () => {
+      const key = el.getAttribute('data-doc-visible');
+      const [folder, idx] = key.split('-');
+      documents[folder][Number(idx)].visible = !documents[folder][Number(idx)].visible;
+      render();
+    }));
+    document.querySelectorAll('[data-action="export-full"]').forEach(el => el.addEventListener('click', () => toast('Full Master Itinerary exported as PDF.')));
+    document.querySelectorAll('[data-action="export-coordinator"]').forEach(el => el.addEventListener('click', () => toast('Choose a coordinator to export their run sheet, picker built next pass.')));
+    document.querySelectorAll('[data-action="export-vendor"]').forEach(el => el.addEventListener('click', () => toast('Choose a vendor to export their call sheet, picker built next pass.')));
+    document.querySelectorAll('[data-action="add-note"]').forEach(el => el.addEventListener('click', () => toast('Add Note form, straightforward once this is wired to real input fields.')));
+
+    // Itinerary time editing
+    document.querySelectorAll('[data-time-index]').forEach(input => {
+      input.addEventListener('change', () => {
+        const i = Number(input.getAttribute('data-time-index'));
+        itinerary[i].time = input.value.trim();
+        render();
+        toast('Time updated.');
+      });
+      input.addEventListener('click', (ev) => ev.stopPropagation());
+    });
+
+    // Itinerary drag-and-drop reordering
+    let dragFromIndex = null;
+    document.querySelectorAll('[data-itin-index]').forEach(row => {
+      row.addEventListener('dragstart', (ev) => {
+        if (ev.target.tagName === 'INPUT') { ev.preventDefault(); return; }
+        dragFromIndex = Number(row.getAttribute('data-itin-index'));
+        row.classList.add('dragging');
+      });
+      row.addEventListener('dragend', () => row.classList.remove('dragging'));
+      row.addEventListener('dragover', (ev) => ev.preventDefault());
+      row.addEventListener('drop', () => {
+        const toIndex = Number(row.getAttribute('data-itin-index'));
+        if (dragFromIndex === null || dragFromIndex === toIndex) return;
+        const [moved] = itinerary.splice(dragFromIndex, 1);
+        itinerary.splice(toIndex, 0, moved);
+        render();
+        toast('Run of show reordered. Check the time warning if times no longer line up.');
+      });
+    });
+  }
+
+  render();
+})();
+</script>
+
+</body>
+</html>

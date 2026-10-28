@@ -1,0 +1,780 @@
+// ============================================================================
+// THE EVENTSMITH NG — DATABASE SCHEMA
+// Reflects Section 3 of the Platform Blueprint, plus every refinement agreed
+// during discussion: split-fulfilment vendors, competing vendor options,
+// versioned vendor contacts, the two-river financial model (planning fees vs
+// event funds), phase-anchored planning schedules, and junior/senior planner
+// permission tiers.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // The app's everyday queries go through here — Supabase's pooled
+  // ("transaction mode") connection, port 6543. Fine for normal reads and
+  // writes, not fine for running migrations.
+  url       = env("DATABASE_URL")
+  // Migrations (`prisma migrate dev`, `prisma db push`, the initial seed)
+  // need a direct, non-pooled connection — Supabase's port 5432 URL.
+  // Without this, `prisma migrate` fails against a pgbouncer connection.
+  directUrl = env("DIRECT_URL")
+}
+
+// ----------------------------------------------------------------------------
+// ENUMS
+// ----------------------------------------------------------------------------
+
+enum PlannerTier {
+  SUPER_ADMIN // theeventsmithng@gmail.com. Full access + the only tier that can
+              // add/deactivate AdminUser (team) and AuthorisedClientEmail records.
+              // Always active — see AdminUser.isProtected below.
+  SENIOR      // full access, incl. all financial modules
+  JUNIOR      // no access to Budget / Vendor Payments / Planning Fees / Funds Ledger
+}
+
+enum EventStage {
+  UPCOMING
+  ACTIVE_PLANNING
+  COMPLETED
+}
+
+enum TaskStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  WAITING
+  COMPLETED
+}
+
+enum TaskPriority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// Anchor model confirmed in Section 6 of the blueprint: most phases/tasks
+// flex forward from the Planning Start Date; a few (e.g. the vendor meeting)
+// are pinned backward from the Event Date regardless of total runway.
+enum AnchorType {
+  FORWARD_FROM_START
+  BACKWARD_FROM_EVENT_DATE
+  PHASE_COMPLETION // triggers when a referenced phase crosses a completion threshold
+}
+
+// A BudgetLineItem's fulfilment mode — the key refinement from our discussion.
+enum FulfilmentMode {
+  SINGLE // one vendor, no options/allocations needed
+  COMPETING_OPTIONS // several quotes, exactly one gets Selected (e.g. Decor)
+  SPLIT_FULFILMENT // several vendors active at once, portions sum to the total (e.g. Caterer 1/2/3)
+}
+
+enum VendorOptionStatus {
+  CONSIDERING
+  SHORTLISTED
+  SELECTED
+  REJECTED
+}
+
+enum VendorStatus {
+  ACTIVE
+  ON_HOLD
+  DROPPED
+}
+
+enum PaymentStatus {
+  NOT_STARTED
+  DEPOSIT_DUE
+  PART_PAID
+  FULLY_PAID
+  OVERDUE
+}
+
+// Who physically paid a vendor — distinguishes money that passed through
+// EventSmith NG from money the client paid a vendor directly.
+enum PaidBy {
+  EVENTSMITH_NG
+  CLIENT_DIRECT
+}
+
+// A free-text payer name is always allowed; this just gives common ones a
+// first-class type for filtering ("show me everything Parents paid for").
+enum PayerType {
+  CLIENT
+  PARENTS
+  FAMILY_MEMBER
+  COMPANY_REPRESENTATIVE
+  OTHER
+}
+
+enum DocumentCategory {
+  PLANNING_CONTRACT
+  PLANNING_INVOICE
+  VENDOR_CONTRACT
+  VENDOR_INVOICE
+  VENDOR_QUOTE
+  VENUE_DOCUMENT
+  FLOOR_PLAN
+  GUEST_LIST
+  MOODBOARD
+  INVITATION_DESIGN
+  RECEIPT
+  EVENT_TIMELINE
+  SEATING_PLAN
+  EVENT_FLOW
+  FOOD_FLOW
+  OTHER
+}
+
+enum NoteCategory {
+  CLIENT_REQUEST
+  MEETING_NOTES
+  VENDOR_CONVERSATION
+  DECISION
+  CHANGE_REQUEST
+  REMINDER
+  GENERAL_NOTE
+}
+
+// ----------------------------------------------------------------------------
+// AUTH — passwordless email OTP (Section 8 of the blueprint)
+// ----------------------------------------------------------------------------
+
+model AdminUser {
+  id        String      @id @default(cuid())
+  email     String      @unique
+  name      String
+  tier      PlannerTier @default(JUNIOR)
+  isActive  Boolean     @default(true)
+
+  // True only for the seeded super admin (theeventsmithng@gmail.com).
+  // The app layer refuses any update/deactivate/delete against a row with
+  // isProtected = true, so this account can never be locked out — it is
+  // not a privilege the UI grants, it is set once at seed time.
+  isProtected Boolean   @default(false)
+
+  // Who added this team member. Null for the seeded super admin, which is
+  // the root of the chain — every other AdminUser traces back to an
+  // addedByAdminId that was a super admin at the time they added it.
+  addedByAdminId String?
+  addedByAdmin   AdminUser?  @relation("AdminAddedBy", fields: [addedByAdminId], references: [id])
+  teamMembersAdded AdminUser[] @relation("AdminAddedBy")
+  clientEmailsAdded AuthorisedClientEmail[] @relation("ClientEmailAddedBy")
+
+  createdAt DateTime    @default(now())
+
+  eventAssignments EventAssignment[]
+  itineraryItems   ItineraryActivity[] @relation("Coordinator")
+  notes            Note[]
+  activityEntries  ActivityLogEntry[]
+  otpCodes         OtpCode[]           @relation("AdminOtp")
+  sessions         Session[]           @relation("AdminSession")
+}
+
+// One row per email authorised to view a specific event's client dashboard.
+// A single event can (and often will) have more than one — e.g. both halves
+// of a couple.
+model AuthorisedClientEmail {
+  id        String   @id @default(cuid())
+  email     String
+  eventId   String
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now())
+
+  // Which super admin authorised this client email. Required at the app
+  // layer (enforced in the route, not the DB) because only a super admin
+  // can create this record in the first place.
+  addedByAdminId String?
+  addedByAdmin   AdminUser? @relation("ClientEmailAddedBy", fields: [addedByAdminId], references: [id])
+
+  otpCodes  OtpCode[] @relation("ClientOtp")
+  sessions  Session[] @relation("ClientSession")
+
+  @@unique([email, eventId])
+  @@index([email])
+}
+
+// OTP codes are never stored in plaintext — only a hash, with expiry and a
+// single-use flag, per the Section 8 recommendation.
+model OtpCode {
+  id              String                  @id @default(cuid())
+  codeHash        String
+  expiresAt       DateTime
+  used            Boolean                 @default(false)
+  attempts        Int                     @default(0)
+  createdAt       DateTime                @default(now())
+
+  adminUserId     String?
+  adminUser       AdminUser?              @relation("AdminOtp", fields: [adminUserId], references: [id])
+  clientEmailId   String?
+  clientEmail     AuthorisedClientEmail?  @relation("ClientOtp", fields: [clientEmailId], references: [id])
+
+  @@index([adminUserId])
+  @@index([clientEmailId])
+}
+
+model Session {
+  id              String                  @id @default(cuid())
+  token           String                  @unique
+  createdAt       DateTime                @default(now())
+  expiresAt       DateTime
+
+  adminUserId     String?
+  adminUser       AdminUser?              @relation("AdminSession", fields: [adminUserId], references: [id])
+  clientEmailId   String?
+  clientEmail     AuthorisedClientEmail?  @relation("ClientSession", fields: [clientEmailId], references: [id])
+  // Client sessions are scoped to exactly the event tied to clientEmailId —
+  // enforced in application logic, never by a broader "client" role.
+
+  @@index([adminUserId])
+  @@index([clientEmailId])
+}
+
+// ----------------------------------------------------------------------------
+// TEAM
+// ----------------------------------------------------------------------------
+
+model EventAssignment {
+  id          String    @id @default(cuid())
+  eventId     String
+  event       Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  teamMemberId String
+  teamMember  AdminUser @relation(fields: [teamMemberId], references: [id])
+  responsibility String? // free text, e.g. "Event day lead coordinator"
+
+  @@unique([eventId, teamMemberId])
+}
+
+// ----------------------------------------------------------------------------
+// EVENT TYPES & TEMPLATES
+// Templates are cloned into an Event's own Planning Phases / Tasks / Vendor
+// Categories / Budget Categories at creation time — editing the template
+// later never retroactively changes events already created from it.
+// ----------------------------------------------------------------------------
+
+model EventType {
+  id        String          @id @default(cuid())
+  name      String          @unique // "Wedding", "Traditional Wedding", "Birthday", "Corporate Event", "Custom Event"...
+  isCustom  Boolean         @default(false)
+  templates EventTemplate[]
+  events    Event[]
+}
+
+model EventTemplate {
+  id          String   @id @default(cuid())
+  eventTypeId String
+  eventType   EventType @relation(fields: [eventTypeId], references: [id])
+  name        String   // e.g. "Standard Wedding Template v1"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  phases           TemplatePhase[]
+  vendorCategories TemplateVendorCategory[]
+  budgetCategories TemplateBudgetCategory[]
+  documentFolders  TemplateDocumentFolder[]
+  events           Event[]
+}
+
+model TemplatePhase {
+  id                String        @id @default(cuid())
+  templateId        String
+  template          EventTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  order             Int
+  name              String        // e.g. "Building the 'A' Team"
+  focusPoint        String?
+  explanation       String?       @db.Text
+  anchorType        AnchorType    @default(FORWARD_FROM_START)
+  anchorOffsetDays  Int?          // used with FORWARD_FROM_START / BACKWARD_FROM_EVENT_DATE
+  triggerPhaseOrder Int?          // used with PHASE_COMPLETION — which phase (by order) must complete first
+  triggerThresholdPct Int?        @default(90) // % completion of triggerPhase that starts this one
+  // Priority ranking rationale (Section 6): rank reflects vendor scarcity risk
+  // and impact-if-wrong, not a fixed category list. Recorded here as a note
+  // for humans; TemplateVendorCategory.priorityTier is what the system uses.
+  priorityRationale String?       @db.Text
+
+  tasks TemplateTask[]
+}
+
+model TemplateTask {
+  id          String        @id @default(cuid())
+  phaseId     String
+  phase       TemplatePhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  order       Int
+  label       String
+  defaultPriority TaskPriority @default(MEDIUM)
+  notes       String?       @db.Text
+}
+
+// Priority tier is manually ranked per event type per Section 6: "book
+// earliest whoever has the highest impact-if-wrong and scarcity risk."
+// Tier 1 = book first (e.g. venue, decor/aesthetics, entertainment, media,
+// production/styling for weddings). Tier 2 = food & drinks. Tier 3 = guest
+// management/logistics. Tiers are event-type specific, not universal.
+model TemplateVendorCategory {
+  id           String        @id @default(cuid())
+  templateId   String
+  template     EventTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name         String
+  priorityTier Int           @default(2)
+  isCustom     Boolean       @default(false)
+}
+
+model TemplateBudgetCategory {
+  id         String        @id @default(cuid())
+  templateId String
+  template   EventTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  order      Int
+  name       String
+}
+
+model TemplateDocumentFolder {
+  id         String        @id @default(cuid())
+  templateId String
+  template   EventTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  name       String
+}
+
+// ----------------------------------------------------------------------------
+// EVENT
+// ----------------------------------------------------------------------------
+
+model Event {
+  id              String     @id @default(cuid())
+  names           String     // "Amara & Chidi", "Zenith Capital — Annual Conference"
+  eventTypeId     String
+  eventType       EventType  @relation(fields: [eventTypeId], references: [id])
+  templateId      String?
+  template        EventTemplate? @relation(fields: [templateId], references: [id])
+
+  stage           EventStage @default(UPCOMING)
+  location        String?
+  primaryVenue    String?
+  expectedGuests  Int?
+  theme           String?
+  colours         String?
+  hashtag         String?
+  planningStartDate DateTime?
+  contactInfo     String?
+  additionalNotes String?    @db.Text
+
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  components         EventComponent[]
+  authorisedEmails   AuthorisedClientEmail[]
+  planningPhases      PlanningPhase[]
+  vendors             Vendor[]
+  incomingFunds       IncomingClientFund[]
+  planningFeePayments PlanningFeePayment[]
+  itineraryActivities ItineraryActivity[]
+  teamAssignments     EventAssignment[]
+  documents           Document[]
+  notes               Note[]
+  activityLog         ActivityLogEntry[]
+
+  @@index([eventTypeId])
+  @@index([stage])
+}
+
+// A wedding might contain: Traditional Wedding, Church Wedding, Reception,
+// After Party. Each has its own date/venue/theme/guest count/budget.
+model EventComponent {
+  id           String   @id @default(cuid())
+  eventId      String
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  name         String   // "Wedding Reception", "Traditional Engagement"
+  date         DateTime?
+  time         String?
+  venue        String?
+  location     String?
+  theme        String?
+  colours      String?
+  guestCount   Int?
+
+  budgetCategories BudgetCategory[]
+  tasks            Task[]
+  itineraryActivities ItineraryActivity[]
+
+  @@index([eventId])
+}
+
+// ----------------------------------------------------------------------------
+// PLANNING SCHEDULE & CHECKLIST
+// One shared schedule per event (components confirmed to sit days, not
+// months, apart in practice — Section 6).
+// ----------------------------------------------------------------------------
+
+model PlanningPhase {
+  id                  String     @id @default(cuid())
+  eventId             String
+  event               Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  order               Int
+  name                String
+  focusPoint          String?
+  explanation         String?    @db.Text
+  anchorType          AnchorType @default(FORWARD_FROM_START)
+  suggestedStartDate  DateTime?
+  suggestedEndDate    DateTime?
+  actualDueDate       DateTime?
+  status              TaskStatus @default(NOT_STARTED)
+  notes               String?    @db.Text
+
+  tasks Task[]
+
+  @@index([eventId])
+}
+
+model Task {
+  id             String         @id @default(cuid())
+  planningPhaseId String
+  planningPhase   PlanningPhase @relation(fields: [planningPhaseId], references: [id], onDelete: Cascade)
+  eventComponentId String?
+  eventComponent   EventComponent? @relation(fields: [eventComponentId], references: [id])
+
+  label          String
+  dueDate        DateTime?
+  priority       TaskPriority   @default(MEDIUM) // used for phase-weighted progress (Section: checklist weighting)
+  status         TaskStatus     @default(NOT_STARTED)
+  assignedToId   String?
+  assignedTo     AdminUser?     @relation(fields: [assignedToId], references: [id])
+  notes          String?        @db.Text
+  completedAt    DateTime?      // set when status transitions to COMPLETED — used by scheduling.ts
+                                 // to give PHASE_COMPLETION anchors a real trigger date instead of
+                                 // approximating with "now"
+
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([planningPhaseId])
+  @@index([eventComponentId])
+  @@index([assignedToId])
+}
+
+// ----------------------------------------------------------------------------
+// VENDOR DIRECTORY
+// Vendor (the business) is stable; VendorContact (the person there) can
+// change — tracked as its own history rather than overwritten fields.
+// ----------------------------------------------------------------------------
+
+model VendorCategory {
+  id       String  @id @default(cuid())
+  name     String  @unique
+  isCustom Boolean @default(false)
+  vendors  Vendor[]
+}
+
+model Vendor {
+  id              String         @id @default(cuid())
+  eventId         String
+  event           Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        VendorCategory @relation(fields: [categoryId], references: [id])
+  businessName    String
+  instagram       String?
+  website         String?
+  serviceProvided String?
+  status          VendorStatus   @default(ACTIVE)
+  notes           String?        @db.Text
+
+  createdAt DateTime @default(now())
+
+  contacts         VendorContact[]
+  vendorOptions    VendorOption[]
+  vendorAllocations VendorAllocation[]
+  payments         VendorPayment[]
+  documents        Document[]
+  itineraryLinks   ItineraryActivityVendor[]
+  fundAllocations  FundAllocation[]
+
+  @@index([eventId])
+  @@index([categoryId])
+}
+
+// The contact-turnover refinement: a vendor's point of contact can change
+// over time without losing the history of who it used to be.
+model VendorContact {
+  id          String   @id @default(cuid())
+  vendorId    String
+  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  contactName String
+  role        String?
+  phone       String?
+  email       String?
+  isCurrent   Boolean  @default(true)
+  startedAt   DateTime @default(now())
+  endedAt     DateTime?
+
+  @@index([vendorId])
+}
+
+// ----------------------------------------------------------------------------
+// BUDGET
+// A BudgetLineItem is SINGLE, COMPETING_OPTIONS, or SPLIT_FULFILMENT.
+// Only one of (VendorOption[] / VendorAllocation[]) is populated depending
+// on fulfilmentMode.
+// ----------------------------------------------------------------------------
+
+model BudgetCategory {
+  id               String          @id @default(cuid())
+  eventComponentId String
+  eventComponent   EventComponent  @relation(fields: [eventComponentId], references: [id], onDelete: Cascade)
+  order            Int
+  name             String
+
+  lineItems BudgetLineItem[]
+
+  @@index([eventComponentId])
+}
+
+model BudgetLineItem {
+  id             String         @id @default(cuid())
+  categoryId     String
+  category       BudgetCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  name           String
+  quantity       String?        // kept as free text — your sheet uses both numbers ("800") and text ("2 sets")
+  fulfilmentMode FulfilmentMode @default(SINGLE)
+
+  estimatedAmount Decimal?      @db.Decimal(14, 2)
+  quotedAmount    Decimal?      @db.Decimal(14, 2)
+  // committedAmount is the number that drives category/subtotal/grand-total
+  // maths: for SINGLE it's set directly; for COMPETING_OPTIONS it mirrors the
+  // Selected option's amount; for SPLIT_FULFILMENT it's the sum of all
+  // VendorAllocation amounts. Kept denormalised for fast rollups, recomputed
+  // by application logic whenever a child option/allocation changes.
+  committedAmount Decimal       @default(0) @db.Decimal(14, 2)
+
+  initialDeposit  Decimal?      @db.Decimal(14, 2)
+  amountPaid      Decimal       @default(0) @db.Decimal(14, 2)
+  balanceDueDate  DateTime?
+  dateRequired    DateTime?
+  comments        String?       @db.Text
+
+  vendorOptions     VendorOption[]
+  vendorAllocations VendorAllocation[]
+
+  @@index([categoryId])
+}
+
+// Used when fulfilmentMode = COMPETING_OPTIONS. Exactly one should carry
+// status = SELECTED at a time; the rest remain for history (never deleted).
+model VendorOption {
+  id             String             @id @default(cuid())
+  lineItemId     String
+  lineItem       BudgetLineItem     @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+  vendorId       String?            // linked once a real Vendor record exists (e.g. on selection)
+  vendor         Vendor?            @relation(fields: [vendorId], references: [id])
+  vendorNameFreeText String?        // usable before a full Vendor record is created
+  quotedAmount   Decimal            @db.Decimal(14, 2)
+  whatIsIncluded String?            @db.Text
+  quoteDate      DateTime?
+  contactInfo    String?
+  notes          String?            @db.Text
+  status         VendorOptionStatus @default(CONSIDERING)
+
+  createdAt DateTime @default(now())
+
+  @@index([lineItemId])
+  @@index([vendorId])
+}
+
+// Used when fulfilmentMode = SPLIT_FULFILMENT — several vendors active at
+// once on one line item (e.g. Caterer 1/2/3 for 650 guests), each covering
+// a portion. Amounts should sum to the line item's committedAmount.
+model VendorAllocation {
+  id           String         @id @default(cuid())
+  lineItemId   String
+  lineItem     BudgetLineItem @relation(fields: [lineItemId], references: [id], onDelete: Cascade)
+  vendorId     String?
+  vendor       Vendor?        @relation(fields: [vendorId], references: [id])
+  vendorNameFreeText String?
+  portionLabel String         // e.g. "260 guests", "half the guestlist"
+  amount       Decimal        @db.Decimal(14, 2)
+  notes        String?        @db.Text
+
+  @@index([lineItemId])
+  @@index([vendorId])
+}
+
+// ----------------------------------------------------------------------------
+// FINANCIAL FLOW — two rivers, never mixed (Section 4)
+// ----------------------------------------------------------------------------
+
+// RIVER 1: Planning Fees (client → EventSmith NG, for planning services).
+// Deliberately has no foreign key to IncomingClientFund or BudgetLineItem.
+model PlanningFeePayment {
+  id            String    @id @default(cuid())
+  eventId       String
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  contractAmount Decimal? @db.Decimal(14, 2)
+  invoiceNumber String?
+  amount        Decimal   @db.Decimal(14, 2)
+  isDeposit     Boolean   @default(false)
+  paidAt        DateTime
+  status        PaymentStatus @default(NOT_STARTED)
+  notes         String?   @db.Text
+
+  @@index([eventId])
+}
+
+// RIVER 2: Event Funds — client/family/company money sent to EventSmith NG
+// specifically to pay vendors on their behalf.
+model IncomingClientFund {
+  id            String    @id @default(cuid())
+  eventId       String
+  event         Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  amountReceived Decimal  @db.Decimal(14, 2)
+  receivedAt    DateTime
+  payerType     PayerType @default(CLIENT)
+  payerNameFreeText String? // e.g. "Peace", "Parents" — matches your Payments Breakdown tab
+  purposeNote   String?   @db.Text
+  paymentReference String?
+  notes         String?   @db.Text
+
+  allocations FundAllocation[]
+
+  @@index([eventId])
+}
+
+// One incoming payment can be split across multiple budget line items /
+// vendors — e.g. ₦1,000,000 → ₦450,000 Content Creator + ₦550,000 Cake.
+model FundAllocation {
+  id           String             @id @default(cuid())
+  fundId       String
+  fund         IncomingClientFund @relation(fields: [fundId], references: [id], onDelete: Cascade)
+  amount       Decimal            @db.Decimal(14, 2)
+  budgetLineItemId String?
+  vendorId     String?
+  vendor       Vendor?            @relation(fields: [vendorId], references: [id])
+  notes        String?            @db.Text
+
+  vendorPayments VendorPayment[]
+
+  @@index([fundId])
+  @@index([vendorId])
+}
+
+model VendorPayment {
+  id              String         @id @default(cuid())
+  vendorId        String
+  vendor          Vendor         @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  amount          Decimal        @db.Decimal(14, 2)
+  paidAt          DateTime
+  paymentMethod   String?
+  paidBy          PaidBy         @default(EVENTSMITH_NG)
+  paidByPersonName String?       // who at EventSmith NG / which family member made the payment
+  fundAllocationId String?       // linked back to the IncomingClientFund that funded it, when applicable
+  fundAllocation  FundAllocation? @relation(fields: [fundAllocationId], references: [id])
+  notes           String?        @db.Text
+
+  createdAt DateTime @default(now())
+
+  @@index([vendorId])
+  @@index([fundAllocationId])
+}
+
+// ----------------------------------------------------------------------------
+// ITINERARY / RUN OF SHOW
+// ----------------------------------------------------------------------------
+
+model ItineraryActivity {
+  id               String          @id @default(cuid())
+  eventId          String
+  event            Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventComponentId String?
+  eventComponent   EventComponent? @relation(fields: [eventComponentId], references: [id])
+  order            Int
+  startTime        DateTime
+  endTime          DateTime?
+  activity         String
+  location         String?
+  coordinatorId    String?
+  coordinator      AdminUser?      @relation("Coordinator", fields: [coordinatorId], references: [id])
+  otherTeamMembers String?         // free text list, or normalise to a join table if this grows
+  notes            String?         @db.Text
+  status           TaskStatus      @default(NOT_STARTED)
+
+  vendorLinks ItineraryActivityVendor[]
+
+  @@index([eventId])
+  @@index([coordinatorId])
+}
+
+// Many-to-many: one activity can have several responsible vendors (MC, DJ,
+// Live Band, Lighting/SFX for a Grand Entrance, for example).
+model ItineraryActivityVendor {
+  activityId String
+  activity   ItineraryActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  vendorId   String
+  vendor     Vendor            @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@id([activityId, vendorId])
+}
+
+// ----------------------------------------------------------------------------
+// DOCUMENTS — moodboard is just a Document with versions, no separate table.
+// ----------------------------------------------------------------------------
+
+model Document {
+  id              String            @id @default(cuid())
+  eventId         String
+  event           Event             @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendorId        String?
+  vendor          Vendor?           @relation(fields: [vendorId], references: [id])
+  category        DocumentCategory
+  name            String
+  isVisibleToClient Boolean         @default(false)
+  createdAt       DateTime          @default(now())
+
+  versions DocumentVersion[]
+
+  @@index([eventId])
+  @@index([vendorId])
+}
+
+model DocumentVersion {
+  id           String   @id @default(cuid())
+  documentId   String
+  document     Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  fileUrl      String   // object storage key/URL (S3/R2)
+  versionLabel String   // "Version 1", "Version 2"...
+  uploadedAt   DateTime @default(now())
+  revisionNote String?  @db.Text
+  isCurrent    Boolean  @default(false)
+  isApproved   Boolean  @default(false)
+
+  @@index([documentId])
+}
+
+// ----------------------------------------------------------------------------
+// NOTES & ACTIVITY LOG
+// ----------------------------------------------------------------------------
+
+model Note {
+  id        String       @id @default(cuid())
+  eventId   String
+  event     Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    AdminUser    @relation(fields: [authorId], references: [id])
+  category  NoteCategory @default(GENERAL_NOTE)
+  content   String       @db.Text
+  createdAt DateTime     @default(now())
+
+  @@index([eventId])
+}
+
+// Written automatically by application logic whenever another module
+// changes something meaningful — never hand-entered.
+model ActivityLogEntry {
+  id        String    @id @default(cuid())
+  eventId   String
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  actorId   String?
+  actor     AdminUser? @relation(fields: [actorId], references: [id])
+  action    String    // "Vendor selected", "Payment received from client", "Moodboard replaced"...
+  metadata  Json?
+  createdAt DateTime  @default(now())
+
+  @@index([eventId])
+  @@index([createdAt])
+}

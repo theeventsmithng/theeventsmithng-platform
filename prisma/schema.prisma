@@ -415,6 +415,9 @@ model PlanningPhase {
   focusPoint          String?
   explanation         String?    @db.Text
   anchorType          AnchorType @default(FORWARD_FROM_START)
+  anchorOffsetDays    Int?       // used with FORWARD_FROM_START / BACKWARD_FROM_EVENT_DATE — copied from TemplatePhase when the event is created
+  triggerPhaseOrder   Int?       // used with PHASE_COMPLETION — which phase (by order) must complete first
+  triggerThresholdPct Int?       @default(90) // % completion of triggerPhase that starts this one
   suggestedStartDate  DateTime?
   suggestedEndDate    DateTime?
   actualDueDate       DateTime?

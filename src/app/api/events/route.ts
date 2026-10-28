@@ -102,6 +102,9 @@ export async function POST(req: NextRequest) {
               focusPoint: phase.focusPoint,
               explanation: phase.explanation,
               anchorType: phase.anchorType,
+              anchorOffsetDays: phase.anchorOffsetDays,
+              triggerPhaseOrder: phase.triggerPhaseOrder,
+              triggerThresholdPct: phase.triggerThresholdPct,
             },
           });
 

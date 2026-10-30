@@ -93,7 +93,9 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.OTP_FROM_EMAIL;
+  // Deliberately separate from OTP_FROM_EMAIL (used only for sign-in codes)
+  // so website notifications and login emails can have different senders.
+  const from = process.env.INQUIRY_FROM_EMAIL;
   if (!apiKey || !from) {
     return NextResponse.json({ ok: false, error: "Email service is not configured." }, { status: 500, headers });
   }
